@@ -41,12 +41,16 @@ export function LoginForm() {
     const { mutateAsync, isPending } = useMutation({
         mutationFn: async() => await loginUser({ email, password }),
         mutationKey: ['login Mutation'],
-        onSuccess: (data) => {
-            if(data){
-            toast.success(data.msg!);
-            Cookies.set('user-token', data.token, { expires: 7 }); // Expires in 7 days
-            setToken(data.token)
-            router.push('/dashboard')
+        onSuccess: (data:{msg:string; token:string; error:string}) => {
+            
+            if(data.error!==""){
+                toast.success(data.msg!);
+                Cookies.set('user-token', data.token, { expires: 7 }); // Expires in 7 days
+                setToken(data.token)
+                router.push('/dashboard')
+            }else{
+                toast.error(data.error!);
+
             }
         },
         onError: (error) => {

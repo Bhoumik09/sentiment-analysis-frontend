@@ -39,21 +39,21 @@ export const SignupForm: React.FC = () => {
         }
     }, [])
     const { mutateAsync, isPending } = useMutation({
-        mutationFn: async()=>await signUpUser({email:formData.email, password:formData.password, name:formData.name}),
+        mutationFn: async () => await signUpUser({ email: formData.email, password: formData.password, name: formData.name }),
         mutationKey: ['signUpMutation'],
-        onSuccess: (data) => {
-            toast.success(data.msg);
-            setFormData({
-                name: "",
-                email: "",
-                password: "",
-                confirmPassword: "",
-            })
+        onSuccess: (data: { msg: string; error: string }) => {
+
+            if (data.error !== "") {
+                toast.success(data.msg!);
+            } else {
+                toast.error(data.error!);
+
+            }
         },
         onError: (error) => {
             if (error instanceof Error) {
                 console.log(error)
-                toast.error(error.message, {style:{backgroundColor:'pink', border:'2px solid black'}});
+                toast.error(error.message, { style: { backgroundColor: 'pink', border: '2px solid black' } });
             } else {
                 toast.error("An unexpected error occurred");
             }
@@ -203,14 +203,14 @@ export const SignupForm: React.FC = () => {
                                 </Label>
                             </div>
 
-                            {!isPending?<Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2.5">
+                            {!isPending ? <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2.5">
                                 Create Account
-                            </Button>:<Button type="button" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2.5" disabled>
+                            </Button> : <Button type="button" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2.5" disabled>
                                 <div className="flex gap-2">
-                                    <LoaderPinwheel className="animate-spin"/>
+                                    <LoaderPinwheel className="animate-spin" />
                                     Creating Account
                                 </div>
-                                
+
                             </Button>}
                         </form>
 

@@ -46,17 +46,18 @@ export const fetchUserData = async (
   }
 };
 
-export const  loginUser = async (credentials: {
+export const loginUser = async (credentials: {
   email: string;
   password: string;
-}): Promise<{ msg: string; token: string }|null> => {
+}): Promise<{ msg: string; token: string; error: string }> => {
   try {
     const response = await axios.post(`${api}/auth/login`, {
-      ...credentials 
+      ...credentials,
     });
     return response.data as {
       msg: string;
       token: string;
+      error: "";
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -64,10 +65,10 @@ export const  loginUser = async (credentials: {
       const backendError =
         error.response?.data?.error || "Signup failed due to a server error.";
       // Throw a new, simple error with that specific message
-      throw new Error(backendError);
+      return { msg: "", token: "", error: backendError };
     }
     // For any other kind of error, just re-throw it
-    throw new Error("An unexpected error occurred.");
+    return { msg: "", token: "", error: "An unexpected error occurred." };
   }
 };
 export const signUpUser = async ({
@@ -78,7 +79,7 @@ export const signUpUser = async ({
   email: string;
   password: string;
   name: string;
-}): Promise<{ msg: string }> => {
+}): Promise<{ msg: string; error: string }> => {
   try {
     const response = await axios.post(`${api}/auth/signup`, {
       email,
@@ -87,6 +88,7 @@ export const signUpUser = async ({
     });
     return response.data as {
       msg: string;
+      error: "";
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -94,9 +96,9 @@ export const signUpUser = async ({
       const backendError =
         error.response?.data?.error || "Signup failed due to a server error.";
       // Throw a new, simple error with that specific message
-      throw new Error(backendError);
+      return { msg: "", error: backendError };
     }
     // For any other kind of error, just re-throw it
-    throw new Error("An unexpected error occurred.");
+    return { msg: "", error: "An unexpected error occured" };
   }
 };
