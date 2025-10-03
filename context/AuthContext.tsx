@@ -2,11 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
 import Cookies from 'js-cookie'
 import {
-    useQuery,
-    useMutation,
-    useQueryClient,
-    QueryClient,
-    QueryClientProvider,
+    useQuery
 } from '@tanstack/react-query'
 import { fetchUserData } from "@/app/actions/auth"
 import { Loader } from "lucide-react"
@@ -41,6 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode, initialUserData
         queryFn: () => fetchUserData(authToken!),
         queryKey: ["FetchUsersData", authToken],
         enabled: !!authToken,
+        staleTime:Infinity,
         initialData: initialUserData
     })
 
@@ -63,6 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode, initialUserData
     const handleSignOut = () => {
         Cookies.remove('user-token');
         setAuthData({ token: "", userData: null })
+        router.push('/login')
     }
     return (
         <AuthContext.Provider value={{ setToken, setUserData, authData, handleSignOut }}>

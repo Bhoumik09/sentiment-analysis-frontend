@@ -2,10 +2,8 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Search, Menu, TrendingUp, LogOut } from "lucide-react"
+import { Menu, TrendingUp, LogOut } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
-import Cookies from "js-cookie"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuTrigger } from "./ui/dropdown-menu"
 import { Avatar } from "./ui/avatar"
 export function LiquidGlassNavbar() {
   const { authData, handleSignOut } = useAuth();

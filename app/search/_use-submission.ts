@@ -14,7 +14,7 @@ export interface SubmissionFilters {
 const DEFAULT_FILTERS: SubmissionFilters = {
   page: 1,
   search: "",
-  limit: 25,
+  limit: 10,
   sentiment: "all",
   sentimentScoreLimit: -1,
   industry: "all",
@@ -88,7 +88,7 @@ export const useFilters = () => {
     [updateFilters]
   );
   const setPage = useCallback(
-    (page: string) => updateFilters({ page:parseInt(page) }),
+    (page: number) => updateFilters({ page:page }),
     [updateFilters]
   );
   const setSentiment = useCallback(
@@ -121,7 +121,7 @@ export const useFilters = () => {
   }, [router]);
   const getApiParams = useCallback(() => {
     const params: any = {
-      pageNo: filters.page,
+      page: filters.page,
       limit: filters.limit,
     };
 

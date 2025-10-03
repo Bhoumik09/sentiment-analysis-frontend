@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge"
 import { TrendingUp, TrendingDown, Minus, ExternalLink, Calendar, BarChart3, ArrowRight } from "lucide-react"
 import { StartupResult, } from "@/types/types"
 import { formatDistanceToNow } from 'date-fns';
+import { getSentiment, getSentimentBadgeColor, getSentimentColor } from "@/lib/helper"
+import { getSentimentIcon } from "./sentiment-Icon"
 
 
 
@@ -22,38 +24,12 @@ export function SearchResults({ results, loading }: SearchResultsProps) {
   const [expandedCard, setExpandedCard] = useState<string | null>(null)
   const router = useRouter()
 
-  const getSentimentIcon = (sentiment: number) => {
-    if (sentiment > 0.01) return <TrendingUp className="h-4 w-4 text-green-500" />
-    if (sentiment < -0.01) return <TrendingDown className="h-4 w-4 text-red-500" />
-    return <Minus className="h-4 w-4 text-yellow-500" />
-  }
+  
 
-  const getSentimentColor = (setimentNumber:number|null=null) => {
-    if ( (setimentNumber && setimentNumber>0.01)) return "text-green-500"
-    if ((setimentNumber && setimentNumber<-0.01)) return "text-red-500"
-    return "text-yellow-500"
-  }
-  const getSentiment=(value:number)=>{
-     if(value>0.01)
-        return "Positive"
-      else if (value<-0.01)
-        return "Negative"
-      else
-        return "Neutral"
-  }
-  const getSentimentBadgeColor = (value:number) => {
-    
-      if(value>0.01)
-        return "bg-green-500/20 text-green-500 border-green-500/30"
-      else if (value<-0.01)
-        return "bg-red-500/20 text-red-500 border-red-500/30"
-      else
-        return "bg-yellow-500/20 text-yellow-500 border-yellow-500/30"
-    
-  }
+  
 
   const handleStartupClick = (startupId: string, startupName: string) => {
-    router.push(`/dashboard/company/${startupId}?name=${encodeURIComponent(startupName)}`)
+    router.push(`/dashboard/company/${startupId}`)
   }
 
   if (loading) {

@@ -5,11 +5,11 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { BarChart3, Search, TrendingUp, Settings, User, Bell, BookOpen, Filter, Home, X } from "lucide-react"
+import { BarChart3, Search, TrendingUp, Settings, User, Bell, BookOpen, Filter, Home, X, LogOut } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
 
 const sidebarItems = [
   { name: "Overview", href: "/dashboard", icon: Home },
-  { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
   { name: "Search", href: "/search", icon: Search },
   { name: "Profile", href: "/dashboard/profile", icon: User },
 ]
@@ -47,7 +47,6 @@ export function ResponsiveSidebar({ isOpen, onClose }: ResponsiveSidebarProps) {
       return () => document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [isMobile, isOpen, onClose])
-
   return (
     <>
       {/* Desktop Sidebar */}
@@ -76,8 +75,10 @@ export function ResponsiveSidebar({ isOpen, onClose }: ResponsiveSidebarProps) {
                   <Icon className="h-5 w-5" />
                   <span>{item.name}</span>
                 </Link>
+                
               )
             })}
+            
           </nav>
         </div>
       </div>

@@ -32,16 +32,46 @@ export type StartupWithStats = {
   latest_article_url: string | null;
   latest_article_published_at: Date | null;
 };
+export type CompanyIntroType = {
+  id: string;
+  name: string;
+  sector: string;
+  description: string | null;
+} | null;
+export type CompanySentimentInfoType = {
+  totalArticles: number;
+  positiveCount: number;
+  negativeCount: number;
+  neutralCount: number;
+  averageSentimentScore:number;
+
+};
+export type CompanyRecentNewsType = {
+      title:string,
+      url:string|null,
+      content:string,
+      publishedAt:Date,
+      sentimentScores:number|null,
+      sentiment:string
+}
+export interface sentimentTrendAvg  {
+  current_month: number;
+  previous_month: number;
+  twoMonthsEarlier: number;
+  threeMonthsEarlier: number;
+  fourMonthsEarlier: number;
+  fiveMonthsEarlier: number;
+};
 export interface StartupResult {
   id: string;
   name: string;
   sector: string;
   total_articles: number | null;
   avg_sentiment_score: number;
-  
+
   latestArticles: {
     title: string | null;
-    url: string | null; 
+    url: string | null;
     content: string | null;
     publishedAt: Date | null;
     sentimentScore: number | null;
