@@ -13,8 +13,8 @@ export function LiquidGlassNavbar() {
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
-            <TrendingUp className="h-8 w-8 text-accent" />
-            <span className="text-xl font-bold text-foreground">SentimentFlow</span>
+            <TrendingUp className="size-4 max-md:h-8 max-md:w-8 text-accent" />
+            <span className=" text-md max-md:text-xl font-bold text-foreground mr-1">SentimentFlow</span>
           </Link>
 
 
@@ -27,13 +27,13 @@ export function LiquidGlassNavbar() {
                   <Link href="/login">
                     <Button
                       variant="outline"
-                      className="border-accent text-accent hover:bg-accent hover:text-accent-foreground bg-transparent"
+                      className="border-accent max-sm:p-1 text-accent max-sm:text-xs hover:bg-accent hover:text-accent-foreground bg-transparent"
                     >
                       Login
                     </Button>
                   </Link>
                   <Link href="/signup">
-                    <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">Sign Up</Button>
+                    <Button className="bg-primary max-sm:p-1 max-sm:text-xs hover:bg-primary/90 text-primary-foreground">Sign Up</Button>
                   </Link>
                 </>) : (
                 <>
@@ -45,9 +45,7 @@ export function LiquidGlassNavbar() {
 
 
               )}
-            <Button variant="ghost" size="icon" className="md:hidden text-foreground">
-              <Menu className="h-5 w-5" />
-            </Button>
+            
           </div>
         </div>
       </div>

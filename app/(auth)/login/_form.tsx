@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { WaterflowBackground } from "@/components/waterflow-background"
 import { LiquidGlassNavbar } from "@/components/liquid-glass-navbar"
-import { Eye, EyeOff, Mail, Lock, TrendingUp } from "lucide-react"
+import { Eye, EyeOff, Mail, Lock, TrendingUp, LoaderPinwheel } from "lucide-react"
 import { useMutation } from "@tanstack/react-query"
 import Cookies from 'js-cookie'
 import { toast } from "sonner"
@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
 import { TwinklingStars } from "@/components/twinkling-stars"
 import { loginUser } from "@/app/actions/auth"
+import { is } from "date-fns/locale"
 export function LoginForm() {
     const [showPassword, setShowPassword] = useState(false)
     const [email, setEmail] = useState("")
@@ -37,7 +38,7 @@ export function LoginForm() {
         }
     }, [])
 
-    const { mutateAsync } = useMutation({
+    const { mutateAsync, isPending } = useMutation({
         mutationFn: async() => await loginUser({ email, password }),
         mutationKey: ['login Mutation'],
         onSuccess: (data) => {
@@ -144,10 +145,13 @@ export function LoginForm() {
                                     Forgot password?
                                 </Link>
                             </div>
-
-                            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2.5">
+                            {isPending ?<Button type="submit" className="w-full gap-2 flex bg-primary hover:bg-primary/90 text-primary-foreground py-2.5"disabled>
+                               <LoaderPinwheel className="animate-spin"/>
+                                Signing In 
+                            </Button>:<Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2.5">
                                 Sign In
-                            </Button>
+                            </Button>}
+                            
                         </form>
 
                         <div className="mt-6 text-center">

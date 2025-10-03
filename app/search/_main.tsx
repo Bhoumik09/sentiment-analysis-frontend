@@ -141,13 +141,13 @@ export const SearchPage = () => {
                   className="pl-10 h-12 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-accent focus:border-accent"
                 />
               </div>
-              <div className="flex gap-2">
-                {/* <Button
+              {/* <div className="flex gap-2">
+                <Button
                   onClick={}
                   className="h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   Search
-                </Button> */}
+                </Button>
                 <Button
                   variant="outline"
                   onClick={() => setShowFilters(!showFilters)}
@@ -155,7 +155,7 @@ export const SearchPage = () => {
                 >
                   <SlidersHorizontal className="h-5 w-5" />
                 </Button>
-              </div>
+              </div> */}
             </div>
           </div>
 
