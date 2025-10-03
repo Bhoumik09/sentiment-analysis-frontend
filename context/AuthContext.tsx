@@ -45,10 +45,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode, initialUserData
         if (isSuccess && data) {
             setAuthData({ token: authToken!, userData: data.userInfo });
         }
-        if (isError) {
-            handleSignOut()
-        }
-    }, [isSuccess, data, authToken, isError]);
+        
+    }, [isSuccess]);
 
 
     const setUserData = (userData: UserDataProfile) => {

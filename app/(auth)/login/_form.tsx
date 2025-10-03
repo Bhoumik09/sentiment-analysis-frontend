@@ -45,6 +45,7 @@ export function LoginForm() {
             toast.success(data.msg!);
             Cookies.set('user-token', data.token, { expires: 7 }); // Expires in 7 days
             setToken(data.token)
+            router.push('/dashboard')
             }
         },
         onError: (error) => {

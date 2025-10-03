@@ -1,7 +1,7 @@
 
 export const getSentimentColor = (setimentNumber:number|null=null) => {
-    if ( (setimentNumber && setimentNumber>0.01)) return "text-green-500"
-    if ((setimentNumber && setimentNumber<-0.01)) return "text-red-500"
+    if ( (setimentNumber && setimentNumber>0.1)) return "text-green-500"
+    if ((setimentNumber && setimentNumber<-0.1)) return "text-red-500"
     return "text-yellow-500"
   }
  
@@ -41,18 +41,18 @@ export const getSentimentBgColor = (setimentType:string) => {
     }
 }
 export const getSentiment=(value:number)=>{
-     if(value>0.01)
+     if(value>0.1)
         return "Positive"
-      else if (value<-0.01)
+      else if (value<-0.1)
         return "Negative"
       else
         return "Neutral"
   }
 export const getSentimentBadgeColor = (value:number) => {
     
-      if(value>0.01)
+      if(value>0.1)
         return "bg-green-500/20 text-green-500 border-green-500/30"
-      else if (value<-0.01)
+      else if (value<-0.1)
         return "bg-red-500/20 text-red-500 border-red-500/30"
       else
         return "bg-yellow-500/20 text-yellow-500 border-yellow-500/30"

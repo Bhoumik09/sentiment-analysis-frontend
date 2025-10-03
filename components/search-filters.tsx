@@ -13,7 +13,7 @@ export const FilterSelect = ({ Icon,placeholder, options, value, onValueChange, 
           {Icon}
           <span>{placeholder}</span>
         </Label>
-        <Select value={value} onValueChange={onValueChange}>
+        <Select value={value} onValueChange={onValueChange} >
           <SelectTrigger className={className}>
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>

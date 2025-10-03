@@ -209,7 +209,11 @@ export const DashboardPage: React.FC<{ initalStartupsTrendingData: TrendingStart
                     {isStartupLoading ?
                       <div className="flex justify-center items-center animate-spin">
                         <Loader className="animate-spin" size={30} />
-                      </div> : (
+                      </div> : trendingStartupsData?.length===0?
+                      <div className="flex justify-center items-center text-center font-bold">
+                        No new Startups Articles this week
+                      </div>
+                      :(
                         trendingStartupsData?.map((startup, index) => (
                           <div
                             key={startup.name + index.toString()}

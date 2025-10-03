@@ -185,11 +185,11 @@ export const SearchPage = () => {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className={`space-x-6 space-y-6 flex `}>
+              <CardContent className={`space-x-6 space-y-6 flex max-sm:flex-col  max-sm:justify-center max-sm:items-start `}>
                 {/* Sentiment Filter */}
-                <FilterSelect Icon={<TrendingUp className="h-4 w-4 text-accent" />} placeholder="Sentiment Type" options={setimentOptions} value={filters.sentiment} onValueChange={handleSemtimentChange} className="p-2 rounded-lg bg-input  border-border text-foreground" />
-                <FilterSelect Icon={<Factory className="h-4 w-4 text-accent" />} placeholder={"Industry Type"} options={industryOptions} value={filters.industry} onValueChange={handleIndustryChange} className="p-2 rounded-lg bg-input  border-border text-foreground" />
-                <FilterSelect Icon={<NotebookText className="h-4 w-4 text-accent" />} placeholder={"Paper Limit"} options={limitOptions} value={String(filters.limit)} onValueChange={setLimit} className="p-2 rounded-lg bg-input  border-border text-foreground" />
+                <FilterSelect Icon={<TrendingUp className="h-4 w-4 text-accent" />} placeholder="Sentiment Type" options={setimentOptions} value={filters.sentiment} onValueChange={handleSemtimentChange} className="p-2 rounded-lg bg-input  border-border text-foreground w-[150px] flex justify-center" />
+                <FilterSelect Icon={<Factory className="h-4 w-4 text-accent" />} placeholder={"Industry Type"} options={industryOptions} value={filters.industry} onValueChange={handleIndustryChange} className="p-2 rounded-lg bg-input  border-border text-foreground w-[150px] flex justify-center  " />
+                <FilterSelect Icon={<NotebookText className="h-4 w-4 text-accent" />} placeholder={"Paper Limit"} options={limitOptions} value={String(filters.limit)} onValueChange={setLimit} className="p-2 rounded-lg bg-input  border-border text-foreground  flex justify-center" />
 
 
               </CardContent>
@@ -202,7 +202,7 @@ export const SearchPage = () => {
                 </h2>
               </div> */}
               <SearchResults results={companies} loading={isLoading} />
-              {!isLoading && <Pagination className="flex items-center justify-center space-y-4">
+              {!isLoading && <Pagination className="flex items-center justify-center space-y-4 overflow-x-auto">
                 <PaginationContent>
                   {<PaginationItem>
                     <Button disabled={filters.page==1} onClick={(e) => {

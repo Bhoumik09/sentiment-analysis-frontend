@@ -120,7 +120,7 @@ export function SearchResults({ results, loading }: SearchResultsProps) {
                   <BarChart3 className="h-4 w-4" />
                   <span>{result.total_articles} articles</span>
                 </span>
-                <span className="flex items-center space-x-1">
+                <span className="hidden items-center space-x-1 sm:flex">
                   <Calendar className="h-4 w-4" />
                   <span> {!result.latestArticles[0]  ?"No Articles":`Latest news was  ${ result.latestArticles[0].publishedAt && formatDistanceToNow(result?.latestArticles[0]?.publishedAt)}`}</span>
                 </span>
@@ -137,7 +137,12 @@ export function SearchResults({ results, loading }: SearchResultsProps) {
                 {expandedCard === result.id ? "Hide Details" : "View Details"}
               </Button>
             </div>
-
+            <div>
+              <span className="flex items-center space-x-1 sm:hidden text-sm">
+                  <Calendar className="h-4 w-4" />
+                  <span> {!result.latestArticles[0]  ?"No Articles":`Latest news was  ${ result.latestArticles[0].publishedAt && formatDistanceToNow(result?.latestArticles[0]?.publishedAt)}`}</span>
+                </span>
+            </div>
             {expandedCard === result.id && (
               <div className="border-t border-border pt-4 mt-4">
                 <h4 className="text-sm font-semibold text-foreground mb-3">Recent Articles</h4>
@@ -151,7 +156,7 @@ export function SearchResults({ results, loading }: SearchResultsProps) {
                           {/* <span>{article.source}</span> */}
                           <span>{article.publishedAt &&formatDistanceToNow(article.publishedAt!) } ago</span>
                           <span className={getSentimentColor(article.sentimentScore)}>
-                            {article.sentimentScore && article.sentimentScore > 0 ? "+" : ""}
+                            {article.sentimentScore && article.sentimentScore >= 0 ? "+" : ""}
                             {article?.sentimentScore?.toFixed(2)}
                           </span>
                         </div>
