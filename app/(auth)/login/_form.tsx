@@ -43,7 +43,7 @@ export function LoginForm() {
         mutationKey: ['login Mutation'],
         onSuccess: (data:{msg:string; token:string; error:string}) => {
             
-            if(data.error!==""){
+            if(data.error ===""){
                 toast.success(data.msg!);
                 Cookies.set('user-token', data.token, { expires: 7 }); // Expires in 7 days
                 setToken(data.token)
