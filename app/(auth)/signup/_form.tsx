@@ -43,7 +43,7 @@ export const SignupForm: React.FC = () => {
         mutationKey: ['signUpMutation'],
         onSuccess: (data: { msg: string; error: string }) => {
 
-            if (data.error === "") {
+            if (data.error === "" || data.error === undefined || data.error === null) {
                 toast.success(data.msg!);
             } else {
                 toast.error(data.error!);

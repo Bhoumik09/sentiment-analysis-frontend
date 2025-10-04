@@ -57,7 +57,7 @@ export const loginUser = async (credentials: {
     return response.data as {
       msg: string;
       token: string;
-      error: "";
+      error: string;
     };
   } catch (error) {
     if (axios.isAxiosError(error)) {
