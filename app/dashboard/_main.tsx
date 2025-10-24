@@ -9,19 +9,7 @@ import { dashboardAnalyticsFetchType, TrendingStartups, TrendingStartupsFetchTyp
 import { useQuery } from "@tanstack/react-query"
 import { fetchDashboardData, fetchTrendingStartups } from "../actions/dashboardAnalytics"
 import { Fragment } from "react"
-const mockData = {
-  totalStartups: 247,
-  positiveArticles: 1834,
-  negativeArticles: 456,
-  neutralArticles: 892,
-  avgSentiment: 0.34,
-  trendingStartups: [
-    { name: "Zomato", sentiment: 0.78, change: "+12%" },
-    { name: "Swiggy", sentiment: 0.65, change: "+8%" },
-    { name: "Paytm", sentiment: -0.23, change: "-15%" },
-    { name: "Byju's", sentiment: -0.45, change: "-22%" },
-  ],
-}
+
 
 export const DashboardPage: React.FC<{ initalStartupsTrendingData: TrendingStartupsFetchType, token: string; initialDashBoardAnalyticsData: dashboardAnalyticsFetchType }> = ({ initalStartupsTrendingData, token, initialDashBoardAnalyticsData }) => {
   const { data: trendingStartupsData, isLoading: isStartupLoading, isFetching: isStartupFetching } = useQuery({
@@ -31,6 +19,7 @@ export const DashboardPage: React.FC<{ initalStartupsTrendingData: TrendingStart
     initialData:initalStartupsTrendingData?initalStartupsTrendingData:undefined,
     select: (data) => data ? data.trendingStartups : null
   });
+  
   const { data: dashBoardData, isFetching: isDashboardFetching, isLoading: isDashboardLoading } = useQuery({
     queryFn: () => fetchDashboardData({ token: token }),
     queryKey: ['dashBoard-stats'],
@@ -230,11 +219,7 @@ export const DashboardPage: React.FC<{ initalStartupsTrendingData: TrendingStart
                                 </p>
                               </div>
                             </div>
-                            <div
-                              className={`text-sm font-medium ${startup.percentage_change >= 0 ? "text-green-500" : "text-red-500"}`}
-                            >
-                              {startup.percentage_change > 0 && "+"}{startup.percentage_change}%
-                            </div>
+                            
                           </div>
                         ))
                       )}

@@ -55,6 +55,7 @@ export const SearchPage = () => {
     placeholderData: keepPreviousData,
 
   });
+  console.log(companiesListResponse)
   const companies = companiesListResponse?.startups || [];
   const paginationInfo = companiesListResponse?.meta;
 
@@ -128,7 +129,7 @@ export const SearchPage = () => {
           title="Dashboard Overview"
           subtitle="Real-time sentiment analysis for Indian startups"
         />
-        <main className="p-6 w-full" ref={contentRef}>
+        <main className="p-6 max-sm:p-3 w-full" ref={contentRef}>
           {/* Search Bar */}
           <div className="mb-6 w-full">
             <div className="flex flex-col sm:flex-row gap-4 w-full">

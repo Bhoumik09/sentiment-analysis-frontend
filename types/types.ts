@@ -6,7 +6,6 @@ import {
 export type TrendingStartups = {
   startupId: string;
   name: string;
-  percentage_change: number;
   current_sentiment: number;
 };
 export type dashboardAnalyticsType = {
@@ -66,17 +65,11 @@ export interface StartupResult {
   id: string;
   name: string;
   sector: string;
+  description:string;
   total_articles: number | null;
   avg_sentiment_score: number;
-
-  latestArticles: {
-    title: string | null;
-    url: string | null;
-    content: string | null;
-    publishedAt: Date | null;
-    sentimentScore: number | null;
-    sentiment: string | null;
-  }[];
+  image_url: string | null;
+  
 }
 export type TrendingStartupsFetchType = Awaited<
   ReturnType<typeof fetchTrendingStartups>
