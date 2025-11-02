@@ -30,13 +30,15 @@ export const fetchUserData = async (
       },
     });
     return response.data as {
-      userInfo: { id: string; email: string; name: string };
+      userInfo: { id: string; email: string; name: string; roleId:number };
     };
   } catch (error) {
+    console.log(error)
     if (axios.isAxiosError(error)) {
       // Extract the specific error message from your backend's JSON response
+      console.log(error.message)
       const backendError =
-        error.response?.data?.error || "Login failed due to a server error.";
+        error.message || "Login failed due to a server error.";
       // Throw a new, simple error with that specific message
       console.log(backendError);
       console.error(backendError);

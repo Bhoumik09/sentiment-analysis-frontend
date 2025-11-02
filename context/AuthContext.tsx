@@ -14,6 +14,7 @@ export interface UserDataProfile {
     name: string
     id: string
     email: string
+    roleId:number
 }
 interface AuthData {
     token: string;
@@ -39,6 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode, initialUserData
         enabled: !!authToken,
         staleTime:Infinity,
         initialData: initialUserData
+        
     })
 
     useEffect(() => {

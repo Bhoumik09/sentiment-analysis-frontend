@@ -24,17 +24,10 @@ interface SearchResultsProps {
 }
 
 export function SearchResults({ results, loading }: SearchResultsProps) {
-  const [expandedCard, setExpandedCard] = useState<string | null>(null)
   const router = useRouter()
-
-
-
-
-
   const handleStartupClick = (startupId: string, startupName: string) => {
     router.push(`/dashboard/company/${startupId}`)
   }
-
   if (loading) {
     return (
       <div className="grid grid-cols-3 gap-6">
@@ -79,27 +72,27 @@ export function SearchResults({ results, loading }: SearchResultsProps) {
     }
   }
   return (
-    <div className="grid lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-6 max-sm:py-2 ">
+    <div className="grid xl:grid-cols-3 md:grid-cols-2  sm:grid-cols-1 gap-6 max-sm:py-2 ">
       {results.map((result) => (
         <Card
           key={result.id}
-          className={` backdrop-blur-sm  border-l-6 ${getCardBorder(result.avg_sentiment_score)} transition-all duration-200 group cursor-pointer`}
+          className={` backdrop-blur-sm   border-l-6 ${getCardBorder(result.avg_sentiment_score)} transition-all duration-200 group cursor-pointer`}
           onClick={() => handleStartupClick(result.id, result.name)}
         >
           <CardHeader>
-            <Avatar className="m-auto lg:size-30 size-20  bg-blue-200" >
+            <Avatar className="m-auto xl:size-30 size-20  bg-blue-200" >
               <Image src={result.image_url || '/default-startup.png'} alt={result.name} height={20} width={20} />
             </Avatar>
           </CardHeader>
           <CardContent>
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <CardTitle className="flex items-center space-x-2 text-foreground group-hover:text-accent transition-colors">
-                  <span className="text-lg">{result.name}</span>
+                <CardTitle className="flex  items-center space-x-2 text-foreground group-hover:text-accent transition-colors">
+                  <span className="xl:text-lg lg:text-md text-sm">{result.name}</span>
                   {getSentimentIcon(result?.avg_sentiment_score!)}
                   <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </CardTitle>
-                <CardDescription className="text-muted-foreground">{result?.sector}</CardDescription>
+                <CardDescription className="text-muted-foreground">{result?.sector.name}</CardDescription>
               </div>
               <div className="flex items-center space-x-2">
                 <Badge className={getSentimentBadgeColor(result?.avg_sentiment_score!)}>{getSentiment(result?.avg_sentiment_score!)}</Badge>
@@ -109,7 +102,7 @@ export function SearchResults({ results, loading }: SearchResultsProps) {
                 </span>
               </div>
             </div>
-            <div className="text-neutral-400  lg:line-clamp-5 line-clamp-3">
+            <div className="text-neutral-400">
               {result.description}
 
             </div>

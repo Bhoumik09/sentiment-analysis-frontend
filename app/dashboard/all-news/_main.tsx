@@ -12,23 +12,18 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { WaterflowBackground } from "@/components/waterflow-background"
-import { LiquidGlassNavbar } from "@/components/liquid-glass-navbar"
-import { DashboardSidebar } from "@/components/dashboard-sidebar"
-import { DashboardHeader } from "@/components/dashboard-header"
 import { FilterSelect } from "@/components/search-filters"
-import { SearchResults } from "@/components/search-results"
 import { Factory, Filter, IconNode, LoaderPinwheel, NotebookText, Search, SlidersHorizontal, TrendingUp } from "lucide-react"
 import { ResponsiveDashboardHeader } from "@/components/responsive-dashboard-header"
 import { FairyLights } from "@/components/fairy-lights"
-import { TwinklingStars } from "@/components/twinkling-stars"
 import { useAuth } from "@/context/AuthContext"
 // import { useFilters } from "./_use-submission"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import { getPaginatedCompanies } from "../actions/searchPage"
-import { Select, SelectContent, SelectItem, SelectValue } from "@/components/ui/select"
-import { SelectTrigger } from "@radix-ui/react-select"
-import { useFilters } from "./_use-submission"
+import { getPaginatedCompanies, getPaginatedNews } from "../../actions/searchPage"
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { NewsResults } from "@/components/news-list"
+import { useFilters } from "@/hooks/_use-submission"
 
 export const SearchPage = () => {
   const { authData } = useAuth();
@@ -47,17 +42,16 @@ export const SearchPage = () => {
     clearFilters
   } = useFilters()
   const { data: companiesListResponse, isRefetching, isLoading } = useQuery({
-    queryKey: ['paginatedCompanies', getApiParams()],
-    queryFn: () => getPaginatedCompanies({ userToken: authData.token, ...getApiParams() }),
+    queryKey: ['paginatedNews', getApiParams()],
+    queryFn: () => getPaginatedNews({ userToken: authData.token, ...getApiParams() }),
     enabled: !!authData.token,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
     placeholderData: keepPreviousData,
 
   });
-  console.log(companiesListResponse)
-  const companies = companiesListResponse?.startups || [];
-  const paginationInfo = companiesListResponse?.meta;
+  const newsList = companiesListResponse?.paginatedNews || [];
+  const paginationInfo = companiesListResponse?.paginationInfo;
 
   //handlers
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -202,7 +196,7 @@ export const SearchPage = () => {
                 <h2 className="text-lg font-semibold text-foreground">
                 </h2>
               </div> */}
-              <SearchResults results={companies} loading={isLoading} />
+              <NewsResults results={newsList} loading={isLoading} />
               {!isLoading && <Pagination className="flex items-center justify-center space-y-4 overflow-x-auto">
                 <PaginationContent>
                   {<PaginationItem>

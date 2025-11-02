@@ -24,7 +24,7 @@ export function ResponsiveDashboardHeader({ title, subtitle }: ResponsiveDashboa
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden text-foreground"
+              className="lg:hidden text-foreground"
               onClick={() => setIsSidebarOpen(true)}
             >
               <Menu className="h-5 w-5" />

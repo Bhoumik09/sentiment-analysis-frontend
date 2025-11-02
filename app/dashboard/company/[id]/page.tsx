@@ -10,6 +10,7 @@ export default async function CompanyDataPage({ params }: { params: { id: string
   if (!cookieStore.get("user-token")) {
     return redirect('/login')
   }
+  
   const initialData = await fetchCompanyInformation(params.id);
   if (!initialData.companyOverview) {
     return redirect('/not-found')

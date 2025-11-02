@@ -9,7 +9,8 @@ export default async function DashboardLayout({
   children: React.ReactNode
 }) {
   const userData = await fetchUserDataFromServer();
-  if(!userData){
+  
+  if(!userData?.userInfo){
     return redirect('/login')
   }
   return <AuthProvider initialUserData={userData}>

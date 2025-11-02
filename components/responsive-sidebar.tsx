@@ -5,13 +5,16 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { BarChart3, Search, TrendingUp, Settings, User, Bell, BookOpen, Filter, Home, X, LogOut } from "lucide-react"
+import { BarChart3, Search, TrendingUp, Settings, User, Bell, BookOpen, Filter, Home, X, LogOut, Newspaper, Loader,  } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 
 const sidebarItems = [
   { name: "Overview", href: "/dashboard", icon: Home },
-  { name: "Search", href: "/search", icon: Search },
+  { name: "Companies ", href: "/dashboard/search", icon: Search },
+  { name: "All News", href: "/dashboard/all-news", icon: Newspaper },
   { name: "Profile", href: "/dashboard/profile", icon: User },
+  { name: "Upload Images", href: "/dashboard/upload-image", icon: User },
+
 ]
 
 interface ResponsiveSidebarProps {
@@ -21,8 +24,8 @@ interface ResponsiveSidebarProps {
 
 export function ResponsiveSidebar({ isOpen, onClose }: ResponsiveSidebarProps) {
   const pathname = usePathname()
-  const [isMobile, setIsMobile] = useState(false)
-
+  const [isMobile, setIsMobile] = useState(false);
+  const authData=useAuth();
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768)
@@ -50,14 +53,19 @@ export function ResponsiveSidebar({ isOpen, onClose }: ResponsiveSidebarProps) {
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex md: flex-col fixed left-0 top-0 h-[calc(100vh)] w-64 bg-sidebar/90 backdrop-blur-md border-r border-sidebar-border z-40">
+      <div className="hidden lg:flex lg: flex-col fixed left-0 top-0 h-[calc(100vh)] w-64 bg-sidebar/90 backdrop-blur-md border-r border-sidebar-border z-40">
         <Link href="/" className="flex items-center space-x-2 pt-5 justify-center">
           <TrendingUp className="h-8 w-8 " />
           <span className="text-xl font-bold text-foreground">SentimentFlow</span>
         </Link>
         <div className="p-4">
           <nav className="space-y-2">
-            {sidebarItems.map((item) => {
+            {sidebarItems.filter((item)=>{
+              if(authData.authData.userData?.roleId==1 && item.name==="Upload Images"){
+                return false;
+              }
+              return true;
+            }).map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
 
@@ -85,7 +93,7 @@ export function ResponsiveSidebar({ isOpen, onClose }: ResponsiveSidebarProps) {
 
       {/* Mobile Sidebar Overlay */}
       {isMobile && isOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 md:hidden">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 lg:hidden">
           <div
             id="mobile-sidebar"
             className="fixed left-0 top-0 h-full w-64 bg-sidebar/95 backdrop-blur-md border-r border-sidebar-border transform transition-transform duration-300 ease-in-out"
@@ -99,10 +107,17 @@ export function ResponsiveSidebar({ isOpen, onClose }: ResponsiveSidebarProps) {
 
             <div className="p-4">
               <nav className="space-y-2">
-                {sidebarItems.map((item) => {
+                {authData.authData.userData?.roleId? sidebarItems.filter((item)=>{
+                  if(authData.authData.userData?.roleId!==2 && item.name==="Upload Images"){
+                    return true;
+                  }
+                  return false;
+                  
+                }).map((item) => {
                   const Icon = item.icon
                   const isActive = pathname === item.href
-
+                    
+                  
                   return (
                     <Link
                       key={item.name}
@@ -119,7 +134,9 @@ export function ResponsiveSidebar({ isOpen, onClose }: ResponsiveSidebarProps) {
                       <span>{item.name}</span>
                     </Link>
                   )
-                })}
+                }): 
+                <Loader className="animate-spin text-purple-300 m-auto"></Loader>
+                }
               </nav>
             </div>
           </div>

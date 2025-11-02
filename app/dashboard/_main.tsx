@@ -121,7 +121,7 @@ export const DashboardPage: React.FC<{ initalStartupsTrendingData: TrendingStart
 
           {/* Charts and Analytics */}
           <GSAPStagger className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
-            <GSAPHover>
+            <GSAPHover className="h-fit">
               <Card className="bg-card/80 backdrop-blur-sm border-border card-hover">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">

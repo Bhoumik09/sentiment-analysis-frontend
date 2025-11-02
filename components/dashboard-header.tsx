@@ -21,7 +21,7 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden text-foreground"
+            className="xl:hidden block text-foreground"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

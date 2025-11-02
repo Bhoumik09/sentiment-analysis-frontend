@@ -5,7 +5,7 @@ import { ResponsiveDashboardHeader } from "@/components/responsive-dashboard-hea
 import { GSAPStagger, GSAPHover } from "@/components/gsap-animations"
 import { TrendingUp, TrendingDown, Activity, Users, BarChart3, AlertCircle } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
-import { fetchDashboardData, fetchTrendingStartups } from "../actions/dashboardAnalytics"
+import { fetchDashboardData, fetchTrendingStartups } from "../../actions/dashboardAnalytics"
 import { cookies } from "next/headers"
 import { AuthProvider, useAuth } from "@/context/AuthContext"
 import { toast } from "sonner"
