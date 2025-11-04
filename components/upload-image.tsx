@@ -8,10 +8,11 @@ import { Label } from "./ui/label";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CldUploadWidget } from 'next-cloudinary'
+import { CldUploadWidget, CldImage } from 'next-cloudinary'
 import { getStartupsWithoutImage, handleDeleteImage, uploadImage } from "@/app/actions/image-upload";
 import { toast } from "sonner";
 import { revalidatePath } from "next/cache";
+import Image from "next/image";
 interface UploadImageProps {
   id: string;
   name: string;
@@ -21,11 +22,11 @@ export function UploadImage() {
   const [imageUrl, setImageUrl] = useState("");
   const [value, setValue] = useState("");
   const [publicId, setPublicId] = useState("");
-  const {data:startupsList, refetch}=useQuery({
+  const { data: startupsList, refetch } = useQuery({
     queryKey: ['startups-without-image'],
     queryFn: () => getStartupsWithoutImage({ token: '' }),
     enabled: false,
-    select:(data)=>data?.startups||[]
+    select: (data) => data?.startups || []
   })
   const { mutateAsync, isSuccess, isPending, isIdle } = useMutation({
     mutationKey: ["upload-image"],
@@ -36,7 +37,7 @@ export function UploadImage() {
       } else {
         toast.error("Image upload error")
       }
-      
+
       setImageUrl("");
       setValue("");
     }
@@ -65,7 +66,7 @@ export function UploadImage() {
           ))}
 
         </select>
-        <CldUploadWidget uploadPreset="capstone" onSuccess={(result: any) => {
+        <CldUploadWidget uploadPreset="capstone" options={{ resourceType: 'image', showUploadMoreButton: false, singleUploadAutoClose: true, maxFileSize: 1024 * 1024 * 2 , cropping:true}} onSuccess={(result: any) => {
           setImageUrl(result.info.secure_url);
           setPublicId(result.info.public_id);
         }} onError={(error) =>
@@ -75,7 +76,7 @@ export function UploadImage() {
           {({ open }) => {
             return (
               <button onClick={() => {
-                if(imageUrl!==""){
+                if (imageUrl !== "") {
                   handleDeleteImage(publicId);
                   setImageUrl("");
                   setPublicId("");
@@ -83,9 +84,9 @@ export function UploadImage() {
                 }
                 open();
               }} className=" bg-red-500 w-fit m-auto rounded-lg p-3 hover:cursor-pointer" disabled={isPending || isSuccess} >
-                {!imageUrl&& isIdle && "Pick the Image"}
+                {!imageUrl && isIdle && "Pick the Image"}
                 {isPending && "Uploading the Image......"}
-                {imageUrl && isIdle&& "Change Image"}
+                {imageUrl && isIdle && "Change Image"}
                 {isSuccess && "Image Uploaded Successfully"}
               </button>
             );
@@ -97,17 +98,17 @@ export function UploadImage() {
       {imageUrl && (
         <div>
           <p>Upload successful!</p>
-          <img src={imageUrl} alt="Uploaded image" width={300} className="rounded-xl" />
+          <Image src={imageUrl} alt="Uploaded image" width={300} height={300} className="rounded-xl" />
         </div>
       )}
       <div className="flex gap-2">
-        {value!==""  &&( <Button variant="destructive" className="hover:cursor-pointer" onClick={() => {
+        {value !== "" && (<Button variant="destructive" className="hover:cursor-pointer" onClick={() => {
           setImageUrl("");
           setValue("");
         }}>Reset</Button>)}
         {value && imageUrl && <Button variant="default" disabled={imageUrl === ""} onClick={() => {
           upload();
-        }}>Submit for {startupsList?.find((startup)=>startup.id===value)?.name} </Button>}
+        }}>Submit for {startupsList?.find((startup) => startup.id === value)?.name} </Button>}
       </div>
     </div>
   )

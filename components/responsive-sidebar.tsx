@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { BarChart3, Search, TrendingUp, Settings, User, Bell, BookOpen, Filter, Home, X, LogOut, Newspaper, Loader,  } from "lucide-react"
+import { BarChart3, Search, TrendingUp, Settings, User, Bell, BookOpen, Filter, Home, X, LogOut, Newspaper, Loader, Image,  } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 
 const sidebarItems = [
@@ -13,7 +13,7 @@ const sidebarItems = [
   { name: "Companies ", href: "/dashboard/search", icon: Search },
   { name: "All News", href: "/dashboard/all-news", icon: Newspaper },
   { name: "Profile", href: "/dashboard/profile", icon: User },
-  { name: "Upload Images", href: "/dashboard/upload-image", icon: User },
+  { name: "Upload Images", href: "/dashboard/upload-image", icon: Image },
 
 ]
 
@@ -60,7 +60,7 @@ export function ResponsiveSidebar({ isOpen, onClose }: ResponsiveSidebarProps) {
         </Link>
         <div className="p-4">
           <nav className="space-y-2">
-            {sidebarItems.filter((item)=>{
+            {authData.authData.userData?sidebarItems.filter((item)=>{
               if(authData.authData.userData?.roleId==1 && item.name==="Upload Images"){
                 return false;
               }
@@ -85,7 +85,9 @@ export function ResponsiveSidebar({ isOpen, onClose }: ResponsiveSidebarProps) {
                 </Link>
                 
               )
-            })}
+            }):
+            <Loader className="animate-spin  m-auto h-full "></Loader>
+            }
             
           </nav>
         </div>

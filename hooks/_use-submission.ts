@@ -117,7 +117,7 @@ export const useFilters = () => {
   const clearFilters = useCallback(() => {
     setFilters(DEFAULT_FILTERS);
     setDebouncedSearch(DEFAULT_FILTERS.search);
-    router.replace("/search", { scroll: false });
+    router.replace("/dashboard/search", { scroll: false });
   }, [router]);
   const getApiParams = useCallback(() => {
     const params: any = {
