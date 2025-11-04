@@ -109,9 +109,9 @@ export function ResponsiveSidebar({ isOpen, onClose }: ResponsiveSidebarProps) {
               <nav className="space-y-2">
                 {authData.authData.userData?.roleId? sidebarItems.filter((item)=>{
                   if(authData.authData.userData?.roleId!==2 && item.name==="Upload Images"){
-                    return true;
+                    return false;
                   }
-                  return false;
+                  return true;
                   
                 }).map((item) => {
                   const Icon = item.icon
