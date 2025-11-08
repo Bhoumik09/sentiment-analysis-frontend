@@ -24,6 +24,7 @@ import { getPaginatedCompanies, getPaginatedNews } from "../../actions/searchPag
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { NewsResults } from "@/components/news-list"
 import { useFilters } from "@/hooks/_use-submission"
+import { calculatePaginationWindow } from "@/lib/helper"
 
 export const SearchPage = () => {
   const { authData } = useAuth();
@@ -46,13 +47,15 @@ export const SearchPage = () => {
     queryFn: () => getPaginatedNews({ userToken: authData.token, ...getApiParams() }),
     enabled: !!authData.token,
     staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: true,
     placeholderData: keepPreviousData,
-
+    
   });
   const newsList = companiesListResponse?.paginatedNews || [];
   const paginationInfo = companiesListResponse?.paginationInfo;
-
+  const getPagesList = useMemo(() => {
+        if(!companiesListResponse)return[1];
+        return calculatePaginationWindow(filters.page, companiesListResponse.paginationInfo?.totalPages ? companiesListResponse.paginationInfo?.totalPages : 1);
+      }, [filters.page,companiesListResponse]);
   //handlers
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -60,9 +63,7 @@ export const SearchPage = () => {
   const handleSemtimentChange = useCallback((value: string) => {
     setSentiment(value)
   }, [setSentiment]);
-  const handleSentimentLimitChange = useCallback((value: number) => {
-    setSentimentLimit(value)
-  }, [setSentimentLimit])
+  
   const handleIndustryChange = useCallback((value: string) => {
     setIndustry(value)
   }, [setIndustry]);
@@ -94,7 +95,6 @@ export const SearchPage = () => {
   );
   const totalPages = paginationInfo?.totalPages;
 
-  const [showFilters, setShowFilters] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -210,18 +210,18 @@ export const SearchPage = () => {
 
                   </PaginationItem>
                   }
-                  {Array.from({ length: totalPages! }, (_, index:number) => (
+                  {getPagesList.map((value, index:number) => (
                     // The 'key' prop is essential for lists in React
-                    <PaginationItem key={index + 1} onClick={() => setPage(index + 1)} >
-                      <PaginationLink className={`${filters.page === index + 1 && "bg-white/30 font-extrabold"}`} >
-                        {index + 1}
+                    <PaginationItem key={index + 1} onClick={() => setPage(value + 1)} >
+                      <PaginationLink className={`${filters.page === value && "bg-white/30 font-extrabold"}`} >
+                        {value}
                       </PaginationLink>
                     </PaginationItem>
                   ))}
 
 
                   <PaginationItem>
-                    <Button disabled={filters.page >= (totalPages ? totalPages : 1)} onClick={(e) => {
+                    <Button disabled={filters.page >= totalPages! } onClick={(e) => {
                       e.preventDefault(); handlePageChange('inc');
                     }}>
                       {">"}

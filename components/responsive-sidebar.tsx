@@ -12,7 +12,6 @@ const sidebarItems = [
   { name: "Overview", href: "/dashboard", icon: Home },
   { name: "Companies ", href: "/dashboard/search", icon: Search },
   { name: "All News", href: "/dashboard/all-news", icon: Newspaper },
-  { name: "Profile", href: "/dashboard/profile", icon: User },
   { name: "Upload Images", href: "/dashboard/upload-image", icon: Image },
 
 ]

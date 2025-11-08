@@ -13,22 +13,20 @@ import { cookies } from "next/headers";
 // Define your fetcher functions
 export const fetchCompanyInformation = async (
   companyId: string
-): Promise<{ companyOverview: CompanyIntroType }> => {
-    const cookieStore = cookies();
-
+): Promise<CompanyIntroType> => {
+  const cookieStore = cookies();
   const authToken = cookieStore.get("user-token")?.value;
-
   const response = await axios.get(`${api}/company/${companyId}`, {
     headers: {
       Authorization: `Bearer ${authToken}`,
     },
   });
-  return response.data as { companyOverview: CompanyIntroType };
+  return response.data as  CompanyIntroType ;
 };
 
 export const fetchCompanyOverview = async (
   companyId: string
-): Promise<{ companyInfo: CompanySentimentInfoType }> => {
+): Promise<CompanySentimentInfoType > => {
     const cookieStore = cookies();
 
   const authToken = cookieStore.get("user-token")?.value;
@@ -38,7 +36,7 @@ export const fetchCompanyOverview = async (
       Authorization: `Bearer ${authToken}`,
     },
   });
-  return response.data as { companyInfo: CompanySentimentInfoType };
+  return response.data as  CompanySentimentInfoType ;
 };
 
 export const fetchRecentNews = async (

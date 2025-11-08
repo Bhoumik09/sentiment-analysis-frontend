@@ -1,448 +1,514 @@
 "use client"
 
+import React, { use, useEffect, useMemo, useState } from "react"
 import { useParams, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, TrendingUp, TrendingDown, Minus, ExternalLink, BarChart3, Globe, Loader2 } from "lucide-react"
+import { ArrowLeft, TrendingUp, TrendingDown, Minus, ExternalLink, ChevronLeft, ChevronRight, Loader } from "lucide-react"
 import Link from "next/link"
+import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import {
-  Line,
   LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  AreaChart,
-  Area,
+  Legend,
+  Tooltip,
 } from "recharts"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { FadeIn, ScaleIn, StaggerChildren } from "@/components/gsap-animations"
-import { useCompanyInfo } from "@/hooks/use-company-info"
-import { formatDistanceToNow } from "date-fns"
-import { getNextFiveMonths, getSentiment, getSentimentBadgeColor, getSentimentBgColor } from "@/lib/helper"
-import { getSentimentIcon } from "@/components/sentiment-Icon"
-import React, { useCallback, useMemo } from "react"
-
-// Mock data for company details
+import { CompanyIntroType, CompanySentimentInfoType } from "@/types/types"
+import { fetchCompanyInformation, fetchCompanyOverview } from "@/app/actions/companyInfo"
+import { useFilters } from "@/hooks/_use-submission"
+import { getPaginatedCompanies, getPaginatedNews } from "@/app/actions/searchPage"
+import Cookies from "js-cookie"
+import { NewsResults } from "@/components/news-list"
+import { calculatePaginationWindow } from "@/lib/helper"
+// Mock data
 const mockCompanyData = {
-  overview: {
-    description: "Leading fintech startup revolutionizing digital payments and financial services in India",
-    founded: "2018",
-    employees: "500-1000",
-    funding: "$150M Series C",
-    website: "https://example.com",
-    headquarters: "Bangalore, India",
+  id: "1",
+  name: "Swiggy",
+  sector: "Food Delivery",
+  imageUrl: "/food-delivery-startup-logo.jpg",
+  description:
+    "Leading online food delivery platform revolutionizing the way Indians order food with innovative technology and exceptional service quality.",
+  founded: "2014",
+  employees: "5000+",
+  funding: "$1.3B+ Series J",
+  website: "https://swiggy.com",
+  headquarters: "Bangalore, India",
+  keyMetrics: {
+    avgSentiment: 0.65,
+    totalArticles: 245,
+    positiveArticles: 159,
+    neutralArticles: 61,
+    negativeArticles: 25,
+    trendDirection: "up",
   },
-  sentimentTrend: [
-    { date: "2024-01", sentiment: 0.2, articles: 15 },
-    { date: "2024-02", sentiment: 0.35, articles: 22 },
-    { date: "2024-03", sentiment: 0.15, articles: 18 },
-    { date: "2024-04", sentiment: 0.45, articles: 28 },
-    { date: "2024-05", sentiment: 0.3, articles: 25 },
-    { date: "2024-06", sentiment: 0.6, articles: 35 },
-  ],
+  sentimentStats: {
+    positive: { count: 159, percentage: 65, avgScore: 0.82 },
+    neutral: { count: 61, percentage: 25, avgScore: 0.0 },
+    negative: { count: 25, percentage: 10, avgScore: -0.71 },
+  },
   sentimentDistribution: [
     { name: "Positive", value: 65, color: "#10b981" },
     { name: "Neutral", value: 25, color: "#f59e0b" },
     { name: "Negative", value: 10, color: "#ef4444" },
   ],
-  recentNews: [
-    {
-      title: "Company raises $50M in Series B funding round",
-      source: "TechCrunch",
-      sentiment: 0.8,
-      publishedAt: "2024-06-15",
-      url: "#",
-      summary: "The startup announced a successful funding round led by major venture capital firms...",
-    },
-    {
-      title: "New product launch receives positive market response",
-      source: "Economic Times",
-      sentiment: 0.6,
-      publishedAt: "2024-06-12",
-      url: "#",
-      summary: "The company's latest product offering has been well-received by early adopters...",
-    },
-    {
-      title: "Partnership announcement with major bank",
-      source: "Business Standard",
-      sentiment: 0.4,
-      publishedAt: "2024-06-10",
-      url: "#",
-      summary: "Strategic partnership aims to expand digital payment solutions across India...",
-    },
+  sentimentTrend: [
+    { date: "2024-01", sentiment: 0.35, articles: 32 },
+    { date: "2024-02", sentiment: 0.42, articles: 38 },
+    { date: "2024-03", sentiment: 0.38, articles: 35 },
+    { date: "2024-04", sentiment: 0.58, articles: 42 },
+    { date: "2024-05", sentiment: 0.62, articles: 48 },
+    { date: "2024-06", sentiment: 0.65, articles: 50 },
   ],
-  keyMetrics: {
-    avgSentiment: 0.42,
-    totalArticles: 156,
-    positiveArticles: 102,
-    neutralArticles: 39,
-    negativeArticles: 15,
-    trendDirection: "up",
-  },
+  sectorComparison: [
+    { date: "2024-01", swiggy: 0.35, zomato: 0.42, blinkit: 0.45 },
+    { date: "2024-02", swiggy: 0.42, zomato: 0.38, blinkit: 0.5 },
+    { date: "2024-03", swiggy: 0.38, zomato: 0.45, blinkit: 0.48 },
+    { date: "2024-04", swiggy: 0.58, zomato: 0.52, blinkit: 0.55 },
+    { date: "2024-05", swiggy: 0.62, zomato: 0.55, blinkit: 0.58 },
+    { date: "2024-06", swiggy: 0.65, zomato: 0.6, blinkit: 0.62 },
+  ],
+  recentNews: Array.from({ length: 12 }, (_, i) => ({
+    id: i + 1,
+    title: `Swiggy ${i % 3 === 0 ? "announces expansion" : i % 3 === 1 ? "launches new feature" : "wins award"} - ${i + 1}`,
+    source: ["TechCrunch", "Economic Times", "Business Standard"][i % 3],
+    sentiment: [0.8, 0.5, -0.4, 0.7, 0.3, -0.2][i % 6],
+    publishedAt: `2024-06-${15 - i}`,
+    url: "#",
+    summary:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+  })),
 }
 
-export const CompanyDashboard:React.FC=()=> {
-  const params = useParams()
+const ITEMS_PER_PAGE = 5
+interface CompanyDashboardProps {
+  companyInfo: CompanyIntroType
+  sentimentInfo: CompanySentimentInfoType
+  companyId: string;
+}
+export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: CompanyDashboardProps) {
+  const [currentPage, setCurrentPage] = useState(1)
+  const params = useParams();
   const searchParams = useSearchParams()
-  const router = useRouter()
-  const companyId = params.id as string
-  const companyName = searchParams.get("name") || "Unknown Company"
-
-
-
-
-
-
-  const { companyDataLoading,recentSentimentTrend ,isSentimentTrendLoading,companyInfoData, isRecentDataLoading, recentNewsData, companySentimentInfo, companySetimentLoading } = useCompanyInfo(companyId);
-  const monthsData=getNextFiveMonths(new Date());
-  const sentimentOverPeriodTrend= useMemo(()=>{
-    if(!recentSentimentTrend ){
-      return mockCompanyData.sentimentTrend
-    }
-    const trendData = Array.from({length:6},(_,i)=>{
-      
-
-    })
-    return trendData;
-  },[companySentimentInfo,companySetimentLoading])
-  const sentimentStatsGraphData = useMemo(() => {
-  // If data is loading or not yet available, return placeholder data
-  if (companySetimentLoading || !companySentimentInfo) {
-    return [
-      { name: "Positive", value: 65, color: "#10b981" },
-      { name: "Neutral", value: 25, color: "#f59e0b" },
-      { name: "Negative", value: 10, color: "#ef4444" },
-    ];
-  }
-
-  // Once data is available, perform the calculation
-  const totalSentiment = companySentimentInfo.companyInfo.totalArticles;
-
-  // Avoid division by zero, which results in NaN
-  if (totalSentiment === 0) {
-    return [
-      { name: "Positive", value: 0, color: "#10b981" },
-      { name: "Neutral", value: 0, color: "#f59e0b" },
-      { name: "Negative", value: 0, color: "#ef4444" },
-    ];
-  }
+  const router = useRouter();
+  const authToken = Cookies.get('user-token');
+  const {
+    setPage,
+    getApiParams,
+    
+    filters
+  }=useFilters();
+    
   
-  // .toFixed() returns a string, so convert it back to a number for the chart
-  const positive = parseFloat(((companySentimentInfo.companyInfo.positiveCount / totalSentiment) * 100).toFixed(2));
-  const neutral = parseFloat(((companySentimentInfo.companyInfo.neutralCount / totalSentiment) * 100).toFixed(2));
-  const negative = parseFloat(((companySentimentInfo.companyInfo.negativeCount / totalSentiment) * 100).toFixed(2));
+  const { data: companyDataQuery } = useQuery({
+    queryKey: ['companyInfo', companyId],
+    queryFn: () => fetchCompanyInformation(companyId),
+    initialData: companyInfo,
+    select: (data) => ({ companyData: data?.companyOverview, avgSentiment: data?.avgSentiment }),
+    staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData
+  })
+  const { data: sentimentDataQuery } = useQuery({
+    queryKey: ['company-sentiment-info', companyId],
+    queryFn: () => fetchCompanyOverview(companyId),
+    initialData: sentimentInfo,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData
+  })
+   const { data: companyNewsQuery,isLoading:isCompanyNewsLoading } = useQuery({
+    queryKey: ['paginatedNews',getApiParams()],
+    queryFn: () =>getPaginatedNews({ userToken: authToken, ...getApiParams(), searchQuery:companyDataQuery.companyData?.name }),
+    staleTime: 5 * 60 *1000,
+    placeholderData: keepPreviousData,
+    enabled:!!companyDataQuery.companyData
+  })
+  
+  const getPagesList = useMemo(() => {
+      if(!companyNewsQuery)return[1];
+      return calculatePaginationWindow(filters.page, companyNewsQuery.paginationInfo?.totalPages ? companyNewsQuery.paginationInfo?.totalPages : 1);
+    }, [filters.page,companyNewsQuery]);
+  
 
-  return [
-    { name: "Positive", value: positive, color: "#10b981" },
-    { name: "Neutral", value: neutral, color: "#f59e0b" },
-    { name: "Negative", value: negative, color: "#ef4444" },
-  ];
+  const getSentimentColor = (sentiment: number | undefined) => {
 
-// The dependency array now correctly includes all external values used in the calculation.
-// The memoized value will only be recalculated if one of these changes.
-}, [companySentimentInfo, companySetimentLoading]);
+    if (sentiment === undefined) return "text-gray-500"
+    if (sentiment > 0.1) return "text-green-500"
+    if (sentiment < -0.1) return "text-red-500"
+    return "text-yellow-500"
+  }
+
+  const getSentimentLabel = (sentiment: number | undefined) => {
+    if (sentiment === undefined) return "Unknown"
+    if (sentiment > 0.1) return "Positive"
+    if (sentiment < -0.1) return "Negative"
+    return "Neutral"
+  }
+  const percentageandTotal= useMemo(():{positive:number, neutral:number, negative:number, totalArticles:number} => {
+    if (!sentimentDataQuery) return { positive: 0, neutral: 0, negative: 0,totalArticles:0 };
+    const total: number = sentimentDataQuery.sentimentStats.reduce((acc, stat) => acc + stat.sentimentCount, 0);
+    const postivePercent: number = (sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "positive")?.sentimentCount || 0) / total * 100;
+    const neutralPercent: number = (sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "neutral")?.sentimentCount || 0) / total * 100;
+    const negativePercent: number = (sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "negative")?.sentimentCount || 0) / total * 100;
+    return { positive: postivePercent, neutral: neutralPercent, negative: negativePercent , totalArticles: total};
+  }, [sentimentDataQuery])
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className=" bg-background">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => router.back()}
+        className="text-muted-foreground hover:text-foreground mt-2 sticky left-2 top-2"
+      >
+        <ArrowLeft className="h-5 w-5" />
+      </Button>
       <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Header */}
         <FadeIn>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => router.back()}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              {companyDataLoading && !companyInfoData ? <Loader2 className="animate-spin" /> :
-                <div>
-                  <h1 className="text-3xl font-bold text-foreground">{companyInfoData?.name}</h1>
-                  <p className="text-muted-foreground">Company ID: {companyInfoData?.id}</p>
+          <div className="flex items-start justify-between gap-6 mb-8">
+
+            <div className="flex-1 flex max-lg:flex-col gap-6">
+              {/* Company Image */}
+              <div className="lg:flex-shrink-0 max-lg:m-auto">
+                <img
+                  src={companyDataQuery.companyData?.imageUrl || "/placeholder.svg"}
+                  alt={companyDataQuery.companyData?.name}
+                  className="w-40 h-40 rounded-2xl border-2 border-accent/30 object-cover"
+                />
+              </div>
+              {/* Company Info */}
+              <div className="lg:flex-1">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h1 className="text-4xl font-bold text-foreground mb-2">{companyInfo?.companyOverview.name}</h1>
+                    <div className="flex items-center gap-3 mb-4">
+                      <Badge variant="outline" className="text-accent border-accent/50">
+                        {companyDataQuery.companyData?.sector.name}
+                      </Badge>
+                      <Badge className={`${getSentimentColor(companyDataQuery.avgSentiment)} bg-white/10`}>
+                        {getSentimentLabel(mockCompanyData.keyMetrics.avgSentiment)}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span
+                      className={`text-3xl font-bold ${getSentimentColor(companyDataQuery.avgSentiment)}`}
+                    >
+                      {companyDataQuery.avgSentiment! > 0 ? "+" : ""}
+                      {companyDataQuery.avgSentiment!.toFixed(2)}
+                    </span>
+                    <p className="text-sm text-muted-foreground">Average Sentiment</p>
+                  </div>
                 </div>
-              }
-            </div>
-            <div className="flex items-center space-x-3">
-              {companySentimentInfo && <Badge className={`${getSentimentBadgeColor(mockCompanyData.keyMetrics.avgSentiment)} bg-white/30`}>
-                {getSentiment(companySentimentInfo?.companyInfo.averageSentimentScore)}
-              </Badge>}
-              <span className={`text-lg font-semibold ${getSentimentBadgeColor(mockCompanyData.keyMetrics.avgSentiment)}`}>
-                {companyDataLoading ? <Loader2 className="animate-spin" /> : companySentimentInfo?.companyInfo.averageSentimentScore.toFixed(2)}
-              </span>
+                <p className="text-muted-foreground mb-6 max-lg:text-center">{companyDataQuery.companyData?.description}</p>
+
+              </div>
             </div>
           </div>
         </FadeIn>
 
-        {/* Key Metrics */}
-        <StaggerChildren>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <ScaleIn>
-              <Card className="bg-card/80 backdrop-blur-sm border-border">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-2">
-                    <BarChart3 className="h-5 w-5 text-accent" />
-                    <span className="text-sm font-medium text-muted-foreground">Total Articles</span>
-                  </div>
-                  {companySetimentLoading ? <Loader2 className="animate-spin" /> : <p className="text-2xl font-bold text-foreground mt-2">{companySentimentInfo?.companyInfo.totalArticles}</p>}
-
-                </CardContent>
-              </Card>
-            </ScaleIn>
-            <ScaleIn>
-              <Card className="bg-card/80 backdrop-blur-sm border-border">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-2">
-                    <TrendingUp className="h-5 w-5 text-green-500" />
-                    <span className="text-sm font-medium text-muted-foreground">Positive</span>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground mt-2">
-                    {companySentimentInfo?.companyInfo.positiveCount}
-                  </p>
-                </CardContent>
-              </Card>
-            </ScaleIn>
-            <ScaleIn>
-              <Card className="bg-card/80 backdrop-blur-sm border-border">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-2">
-                    <Minus className="h-5 w-5 text-yellow-500" />
-                    <span className="text-sm font-medium text-muted-foreground">Neutral</span>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground mt-2">
-                    {companySentimentInfo?.companyInfo.neutralCount}
-                  </p>
-                </CardContent>
-              </Card>
-            </ScaleIn>
-            <ScaleIn>
-              <Card className="bg-card/80 backdrop-blur-sm border-border">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-2">
-                    <TrendingDown className="h-5 w-5 text-red-500" />
-                    <span className="text-sm font-medium text-muted-foreground">Negative</span>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground mt-2">
-                    {companySentimentInfo?.companyInfo.negativeCount}
-                  </p>
-                </CardContent>
-              </Card>
-            </ScaleIn>
-          </div>
-        </StaggerChildren>
-
-        {/* Main Content */}
         <FadeIn>
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="bg-card/80 backdrop-blur-sm border border-border">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="sentiment">Sentiment Analysis</TabsTrigger>
-              <TabsTrigger value="news">Recent News</TabsTrigger>
+          <Tabs defaultValue="sentiment-stats" className="space-y-6">
+            <TabsList className="bg-card/80 backdrop-blur-sm border border-border flex w-full justify-center">
+              <TabsTrigger value="sentiment-stats">Sentiment Stats</TabsTrigger>
+              <TabsTrigger value="recent-news">Recent News</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                  <Card className="bg-card/80 backdrop-blur-sm border-border">
-                    <CardHeader>
-                      <CardTitle className="text-foreground">Company Overview</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <p className="text-muted-foreground">{companyInfoData?.description}</p>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <span className="text-sm font-medium text-muted-foreground">Sector</span>
-                          <p className="text-foreground">{companyInfoData?.sector}</p>
+            <TabsContent value="sentiment-stats" className="space-y-6">
+              <StaggerChildren>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
+                  {/* Positive */}
+                  <ScaleIn>
+                    <Card className="bg-gradient-to-br from-green-500/30 to-emerald-500/10 border-green-500/30 shadow-md shadow-green-300 hover:border-green-500/60 transition-colors">
+                      <CardContent className="p-2">
+                        <div className="flex items-center justify-between mb-4">
+                          <TrendingUp className="h-6 w-6 text-green-500" />
+                          <span className="text-sm font-semibold text-green-500">
+                            {percentageandTotal.positive.toFixed(2)}%
+                          </span>
                         </div>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-2">Positive Sentiment</h3>
+                        <p className="text-3xl font-bold text-green-500 mb-2">
+                          {sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "positive")?.sentimentCount}
+                        </p>
 
-                      </div>
-                      <Link href={mockCompanyData.overview.website} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" className="w-full bg-transparent">
-                          <Globe className="h-4 w-4 mr-2" />
-                          Visit Website
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </ScaleIn>
+
+                  {/* Neutral */}
+                  <ScaleIn>
+                    <Card className="bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border-yellow-500/30 shadow-md shadow-yellow-300 hover:border-yellow-500/60 transition-colors">
+                      <CardContent className="p-2">
+                        <div className="flex items-center justify-between mb-4">
+                          <Minus className="h-6 w-6 text-yellow-500" />
+                          <span className="text-sm font-semibold text-yellow-500">
+                            {percentageandTotal.neutral.toFixed(2)}%
+                          </span>
+                        </div>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-2">Neutral Sentiment</h3>
+                        <p className="text-3xl font-bold text-green-500 mb-2">
+                          {sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "neutral")?.sentimentCount}
+                        </p>
+
+                      </CardContent>
+                    </Card>
+                  </ScaleIn>
+
+                  {/* Negative */}
+                  <ScaleIn>
+                    <Card className="bg-gradient-to-br from-red-500/10 to-rose-500/10 border-red-500/30 shadow-md shadow-red-300  hover:border-red-500/60 transition-colors">
+                      <CardContent className="p-2">
+                        <div className="flex items-center justify-between mb-4">
+                          <TrendingDown className="h-6 w-6 text-red-500" />
+                          <span className="text-sm font-semibold text-red-500">
+                            {percentageandTotal.negative.toFixed(2)}%
+                          </span>
+                        </div>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-2">Negative Sentiment</h3>
+                        <p className="text-3xl font-bold text-green-500 mb-2">
+                          {sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "negative")?.sentimentCount}
+                        </p>
+
+                      </CardContent>
+                    </Card>
+                  </ScaleIn>
                 </div>
-                <div>
+
+                {/* Overall Stats */}
+                <ScaleIn>
                   <Card className="bg-card/80 backdrop-blur-sm border-border">
                     <CardHeader>
-                      <CardTitle className="text-foreground">Sentiment Distribution</CardTitle>
+                      <CardTitle className="text-foreground">Overall Metrics</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <ChartContainer
-                        config={{
-                          positive: { label: "Positive", color: "#10b981" },
-                          neutral: { label: "Neutral", color: "#f59e0b" },
-                          negative: { label: "Negative", color: "#ef4444" },
-                        }}
-                        className="h-[200px]"
-                      >
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={sentimentStatsGraphData}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={40}
-                              outerRadius={80}
-                              dataKey="value"
-                            >
-                              {mockCompanyData.sentimentDistribution.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} />
-                              ))}
-                            </Pie>
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </ChartContainer>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-2">Total Articles Analyzed</p>
+                          <p className="text-4xl font-bold text-foreground">
+                            {percentageandTotal.totalArticles}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-2">Average Sentiment Score</p>
+                          <p className="text-4xl font-bold text-accent">
+                            {companyInfo?.avgSentiment.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
-                </div>
-              </div>
+                </ScaleIn>
+              </StaggerChildren>
             </TabsContent>
 
-            <TabsContent value="sentiment" className="space-y-6">
+            <TabsContent value="recent-news" className="space-y-6">
               <Card className="bg-card/80 backdrop-blur-sm border-border">
                 <CardHeader>
-                  <CardTitle className="text-foreground">Sentiment Trend Over Time</CardTitle>
-                  <CardDescription className="text-muted-foreground">
-                    Track how public sentiment has changed over the past 6 months
-                  </CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-foreground">Recent News Coverage</CardTitle>
+                      <CardDescription className="text-muted-foreground">
+                        Latest articles and their sentiment analysis
+                      </CardDescription>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      Page {filters.page} of {companyNewsQuery?.paginationInfo?.totalPages}
+                    </span>
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <ChartContainer
-                    config={{
-                      sentiment: { label: "Sentiment Score", color: "#8b5cf6" },
-                      articles: { label: "Article Count", color: "#06b6d4" },
-                    }}
-                    className="h-[400px]"
-                  >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={mockCompanyData.sentimentTrend}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                        <XAxis dataKey="date" stroke="#9ca3af" />
-                        <YAxis stroke="#9ca3af" />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Line
-                          type="monotone"
-                          dataKey="sentiment"
-                          stroke="#8b5cf6"
-                          strokeWidth={3}
-                          dot={{ fill: "#8b5cf6", strokeWidth: 2, r: 4 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="news" className="space-y-6">
-              <Card className="bg-card/80 backdrop-blur-sm border-border">
-                <CardHeader>
-                  <CardTitle className="text-foreground">Recent News Coverage</CardTitle>
-                  <CardDescription className="text-muted-foreground">
-                    Latest articles and their sentiment analysis
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isRecentDataLoading ? <Loader2 className="animate-spin" /> :
-                    <div className="space-y-4">
-                      {recentNewsData && recentNewsData.recentNews.map((article, index) => (
-                        <div key={index} className="p-4 rounded-lg bg-secondary/10 border border-border/50">
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-lg font-semibold text-foreground">{article.title}</h3>
-                            <div className="flex items-center space-x-2">
-                              {getSentimentIcon(article.sentimentScores!)}
-                              <span className={`text-sm font-medium  rounded-md lg:p-1.5 ${getSentimentBgColor(article.sentiment)}`}>
-                                {article.sentiment}
-                              </span>
-                            </div>
-                          </div>
-                          <p className="text-muted-foreground mb-3">{article.content.slice(0, 200)}</p>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3 text-sm text-muted-foreground">
-
-                              <span>{formatDistanceToNow(article.publishedAt!)} ago</span>
-                            </div>
-                            <Link href={article.url!} target="_blank" rel="noopener noreferrer">
-                              <Button variant="ghost" size="sm" className="text-accent hover:text-accent/80">
-                                <ExternalLink className="h-4 w-4 mr-2" />
-                                Read Full Article
-                              </Button>
-                            </Link>
-                          </div>
-                        </div>
+                <CardContent className="space-y-4">
+                  <NewsResults results={companyNewsQuery?.paginatedNews??[]} loading={isCompanyNewsLoading}/>
+                  <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage (Math.max(1, filters.page - 1))}
+                      disabled={filters.page === 1}
+                      className="gap-2"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    <div className="flex gap-2">
+                      {getPagesList.map((page) => (
+                        <Button
+                          key={page}
+                          variant={filters.page === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setPage(page)}
+                          className="w-9 h-9 p-0"
+                        >
+                          {page}
+                        </Button>
                       ))}
                     </div>
-                  }
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage (Math.min(companyNewsQuery?.paginationInfo?.totalPages!,  filters.page + 1))}
+                      disabled={filters.page === companyNewsQuery?.paginationInfo?.totalPages}
+                      className="gap-2"
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="analytics" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="bg-card/80 backdrop-blur-sm border-border">
-                  <CardHeader>
-                    <CardTitle className="text-foreground">Article Volume Trend</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer
-                      config={{
-                        articles: { label: "Articles", color: "#06b6d4" },
-                      }}
-                      className="h-[300px]"
-                    >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={mockCompanyData.sentimentTrend}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                          <XAxis dataKey="date" stroke="#9ca3af" />
-                          <YAxis stroke="#9ca3af" />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Area type="monotone" dataKey="articles" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.3} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
+                {/* Pie Chart */}
+                <ScaleIn>
+                  <Card className="bg-card/80 backdrop-blur-sm border-border">
+                    <CardHeader>
+                      <CardTitle className="text-foreground">Sentiment Distribution</CardTitle>
+                      <CardDescription className="text-muted-foreground">
+                        Breakdown of sentiment across all articles
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px] w-full flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={mockCompanyData.sentimentDistribution}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={100}
+                              dataKey="value"
+                              label={({ name, value }: { name: string; value: number }) => `${name} ${value}%`}
+                            >
+                              {mockCompanyData.sentimentDistribution.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid #06b6d4" }}
+                              formatter={(value: number) => `${value}%`}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </ScaleIn>
 
+                {/* Sector Comparison - Area Chart */}
+                <ScaleIn>
+                  <Card className="bg-card/80 backdrop-blur-sm border-border">
+                    <CardHeader>
+                      <CardTitle className="text-foreground">Sector Sentiment Comparison</CardTitle>
+                      <CardDescription className="text-muted-foreground">
+                        Compare with other companies in your sector
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={mockCompanyData.sectorComparison}>
+                            <defs>
+                              <linearGradient id="colorSwiggy" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                            <XAxis dataKey="date" stroke="#9ca3af" />
+                            <YAxis stroke="#9ca3af" />
+                            <Tooltip
+                              contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid #06b6d4" }}
+                            />
+                            <Legend />
+                            <Area
+                              type="monotone"
+                              dataKey="swiggy"
+                              stroke="#06b6d4"
+                              fill="url(#colorSwiggy)"
+                              name={mockCompanyData.name}
+                            />
+                            <Area
+                              type="monotone"
+                              dataKey="zomato"
+                              stroke="#8b5cf6"
+                              fill="#8b5cf6"
+                              fillOpacity={0.1}
+                              name="Zomato"
+                            />
+                            <Area
+                              type="monotone"
+                              dataKey="blinkit"
+                              stroke="#ec4899"
+                              fill="#ec4899"
+                              fillOpacity={0.1}
+                              name="Blinkit"
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </ScaleIn>
+              </div>
+
+              {/* Sentiment Trend Line Chart */}
+              <ScaleIn>
                 <Card className="bg-card/80 backdrop-blur-sm border-border">
                   <CardHeader>
-                    <CardTitle className="text-foreground">Sentiment vs Volume</CardTitle>
+                    <CardTitle className="text-foreground">Sentiment Trend Analysis</CardTitle>
+                    <CardDescription className="text-muted-foreground">
+                      Historical sentiment score and article volume
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ChartContainer
-                      config={{
-                        sentiment: { label: "Sentiment", color: "#8b5cf6" },
-                        articles: { label: "Articles", color: "#06b6d4" },
-                      }}
-                      className="h-[300px]"
-                    >
+                    <div className="h-[400px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={mockCompanyData.sentimentTrend}>
+                        <LineChart data={mockCompanyData.sentimentTrend}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                           <XAxis dataKey="date" stroke="#9ca3af" />
                           <YAxis stroke="#9ca3af" />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar dataKey="articles" fill="#06b6d4" opacity={0.7} />
-                        </BarChart>
+                          <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid #06b6d4" }} />
+                          <Legend />
+                          <Line
+                            type="monotone"
+                            dataKey="sentiment"
+                            stroke="#06b6d4"
+                            strokeWidth={3}
+                            dot={{ fill: "#06b6d4", r: 5 }}
+                            activeDot={{ r: 7 }}
+                            name="Sentiment Score"
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="articles"
+                            stroke="#8b5cf6"
+                            strokeWidth={2}
+                            dot={{ fill: "#8b5cf6", r: 4 }}
+                            yAxisId="right"
+                            name="Article Count"
+                          />
+                          <YAxis yAxisId="right" orientation="right" stroke="#9ca3af" />
+                        </LineChart>
                       </ResponsiveContainer>
-                    </ChartContainer>
+                    </div>
                   </CardContent>
                 </Card>
-              </div>
+              </ScaleIn>
             </TabsContent>
           </Tabs>
         </FadeIn>

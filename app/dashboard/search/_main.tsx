@@ -30,6 +30,7 @@ import { SelectTrigger } from "@radix-ui/react-select"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { useFilters } from "@/hooks/_use-submission"
 import { CustomBounce } from "gsap-trial/all"
+import { calculatePaginationWindow } from "@/lib/helper"
 
 export const SearchPage = () => {
   const { authData } = useAuth();
@@ -99,44 +100,12 @@ export const SearchPage = () => {
     []
   );
   const totalPages = paginationInfo?.totalPages;
-  const getPagesList = useCallback(() => {
-    if (paginationInfo) {
-      const totalPages: number = paginationInfo?.totalPages;
-      const currentPage = filters.page;
-      const MAX_PAGES_PER_WINDOW = 5;
-      let startPage = currentPage - Math.floor((MAX_PAGES_PER_WINDOW) / 2);
-      let endPage = currentPage + Math.floor((MAX_PAGES_PER_WINDOW) / 2);
-      //pages are less than the max window size
-
-      if (startPage < 1) {
-        if (endPage - startPage + 1 > totalPages) {
-          endPage = totalPages;
-        } else {
-          endPage += 1 - startPage;
-        }
-        startPage = 1;
-      }
-      else if (endPage > totalPages) {
-        if (startPage-(endPage - totalPages + 1) < 1) {
-          startPage = 1;
-        }else{
-          startPage -= endPage - totalPages;
-        }
-        endPage = totalPages;
-      }
-      const pagesArr = []
-      for (let s = startPage; s <= endPage; s++) {
-        pagesArr.push(s);
-      }
-      return pagesArr;
-    } else {
-      return [1]
-    }
-
+  const getPagesList = useMemo(() => {
+    if(!paginationInfo)return[1];
+    return calculatePaginationWindow(filters.page, paginationInfo.totalPages ? paginationInfo.totalPages : 1);
   }, [filters.page, paginationInfo]);
   const contentRef = useRef<HTMLDivElement>(null);
   const scrollConatinerRef = useRef<HTMLDivElement>(null);
-  const activeScrollRef = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -253,7 +222,7 @@ export const SearchPage = () => {
                   </PaginationItem>
                   }
                   <div className=" flex" ref={scrollConatinerRef}>
-                    {getPagesList().map((pageNo) => (
+                    {getPagesList.map((pageNo) => (
                       <PaginationItem key={pageNo} onClick={() => setPage(pageNo)}  >
                         <PaginationLink className={`${filters.page === pageNo && "bg-white/30 font-extrabold"}`}  >
                           {pageNo}

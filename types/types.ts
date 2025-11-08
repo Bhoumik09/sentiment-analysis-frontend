@@ -2,6 +2,7 @@ import {
   fetchDashboardData,
   fetchTrendingStartups,
 } from "@/app/actions/dashboardAnalytics";
+import { WeekNumberLabel } from "react-day-picker";
 
 export type TrendingStartups = {
   startupId: string;
@@ -31,26 +32,29 @@ export type StartupWithStats = {
   latest_article_url: string | null;
   latest_article_published_at: Date | null;
 };
-export type CompanyIntroType = {
-  id: string;
-  name: string;
-  sector: string;
-  description: string | null;
-} | null;
+export type CompanyIntroType ={
+  companyOverview: {
+    sector: {
+      name: string;
+      id: number;
+    };
+  } & {
+    id: string;
+    name: string;
+    sectorId: number;
+    description: string;
+    imageUrl: string;
+  };
+  avgSentiment: number;
+}|null
 export type CompanySentimentInfoType = {
-  totalArticles: number;
-  positiveCount: number;
-  negativeCount: number;
-  neutralCount: number;
-  averageSentimentScore: number;
+  sentimentStats:{
+      sentiment: string;
+      sentimentCount: number;
+  }[]
 };
 export type CompanyRecentNewsType = {
-  title: string;
-  url: string | null;
-  content: string;
-  publishedAt: Date;
-  sentimentScores: number | null;
-  sentiment: string;
+  
 };
 export interface sentimentTrendAvg {
   current_month: number;
@@ -63,15 +67,15 @@ export interface sentimentTrendAvg {
 export interface StartupResult {
   id: string;
   name: string;
-  sector: {name:string}
+  sector: { name: string };
   description: string;
   total_articles: number | null;
   avg_sentiment_score: number;
   image_url: string | null;
 }
-export interface StartupInfo{
-  id:string;
-  name:string;
+export interface StartupInfo {
+  id: string;
+  name: string;
 }
 export interface NewsPaginatedDataType {
   id: string;
@@ -87,12 +91,11 @@ export interface NewsPaginatedDataType {
       id: string;
       name: string;
       sector: {
-        name:string;
-      }
+        name: string;
+      };
     };
   }[];
 }
-
 
 export type TrendingStartupsFetchType = Awaited<
   ReturnType<typeof fetchTrendingStartups>
