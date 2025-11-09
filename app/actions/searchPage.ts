@@ -76,6 +76,7 @@ export async function getPaginatedNews({
   industry,
   sentiment,
   sentimentScoreLimit,
+  companyId,
 }: {
   page?: number;
   limit?: number;
@@ -84,6 +85,7 @@ export async function getPaginatedNews({
   industry?: string;
   sentiment?: string;
   sentimentScoreLimit?: number;
+  companyId?:string;
 }): Promise<{
       status:'failed'|'success'
       paginatedNews?:NewsPaginatedDataType[] ,
@@ -96,6 +98,7 @@ export async function getPaginatedNews({
       error?:string
     }> {
   try {
+    console.log(companyId)
     const params = new URLSearchParams();
     if (page) params.append("page", page.toString());
     if (limit) params.append("limit", limit.toString());
@@ -104,6 +107,7 @@ export async function getPaginatedNews({
     if (sentiment) params.append("sentiment", sentiment);
     if (sentimentScoreLimit)
       params.append("sentimentScoreLimit", sentimentScoreLimit.toString());
+    if (companyId) params.append("companyId", companyId);
     const response = await axios.get(
       `${api}/searchQuery/fetch-news-data?${params.toString()}`,
       {
@@ -112,6 +116,7 @@ export async function getPaginatedNews({
         },
       }
     );
+    console.log(response.data)
     return {
       status: "success",
       ...response.data,

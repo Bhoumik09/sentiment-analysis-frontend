@@ -1,36 +1,10 @@
+import { neutralLimit } from "./constants";
+
 export const getSentimentColor = (setimentNumber: number | null = null) => {
-  if (setimentNumber && setimentNumber > 0.1) return "text-green-500";
-  if (setimentNumber && setimentNumber < -0.1) return "text-red-500";
+  if (setimentNumber && setimentNumber > neutralLimit) return "text-green-500";
+  if (setimentNumber && setimentNumber < -neutralLimit) return "text-red-500";
   return "text-yellow-500";
 };
-
-export function getNextFiveMonths(startDate: Date) {
-  const result: Record<string, string> = {};
-
-  // A helper function to format a date object into "YYYY-MM"
-  const formatDate = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    return `${year}-${month}`;
-  };
-
-  // Loop to calculate the 5 months
-  for (let i = 0; i < 5; i++) {
-    // Create a new date for the target month.
-    // Setting the day to 1 prevents issues with month lengths (e.g., 31st vs 30th).
-    const targetDate = new Date(
-      startDate.getFullYear(),
-      startDate.getMonth() - i,
-      1
-    );
-
-    // Assign to a key, e.g., 'current_month', 'next_month', etc.
-    const key = i === 0 ? "current_month" : `${i}_months_earlier`;
-    result[key] = formatDate(targetDate);
-  }
-
-  return result;
-}
 export const getSentimentBgColor = (setimentType: string) => {
   switch (setimentType) {
     case "positive":
@@ -44,13 +18,13 @@ export const getSentimentBgColor = (setimentType: string) => {
   }
 };
 export const getSentiment = (value: number) => {
-  if (value > 0.1) return "Positive";
-  else if (value < -0.1) return "Negative";
+  if (value > neutralLimit) return "Positive";
+  else if (value < -neutralLimit) return "Negative";
   else return "Neutral";
 };
 export const getSentimentBadgeColor = (value: number) => {
-  if (value > 0.1) return "bg-green-500/20 text-green-500 border-green-500/30";
-  else if (value < -0.1) return "bg-red-500/20 text-red-500 border-red-500/30";
+  if (value > neutralLimit) return "bg-green-500/20 text-green-500 border-green-500/30";
+  else if (value < neutralLimit) return "bg-red-500/20 text-red-500 border-red-500/30";
   else return "bg-yellow-500/20 text-yellow-500 border-yellow-500/30";
 };
 
@@ -102,3 +76,30 @@ export const calculatePaginationWindow = (
 
   return pagesArr;
 };
+/**
+ * Generates a random, visually pleasing color in HSL format.
+ *
+ * @param {number} saturation - The "vibrancy" (0-100). 70 is a good default.
+ * @param {number} lightness - The "brightness" (0-100). 50 is a good default for strong colors.
+ * @returns {string} A CSS HSL color string (e.g., "hsl(249, 70%, 50%)").
+ */
+export function generateRandomHslColor(saturation = 70, lightness = 50) {
+  // 1. Generate a random number from 0 to 360 for the hue
+  const hue = Math.floor(Math.random() * 361); // 0-360 degrees
+
+  // 2. Return the HSL string
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+export const getAvgScore= (sentiment:string, positiveScore:number, negativeScore:number, neutralScore:number):string=>{
+    switch (sentiment){
+        case "neutral":
+            return neutralScore.toPrecision(4);
+        case "positive":
+            return positiveScore.toPrecision(4);
+        case "negative":
+            return negativeScore.toPrecision(4);
+        default:
+          return "0";
+
+    }
+}

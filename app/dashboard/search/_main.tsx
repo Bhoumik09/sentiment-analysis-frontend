@@ -37,14 +37,11 @@ export const SearchPage = () => {
   //use custom hook for filter management
   const {
     filters,
-    debouncedSearch,
-    hasActiveFilters,
     getApiParams,
     setIndustry,
     setLimit,
     setPage,
     setSentiment,
-    setSentimentLimit,
     setSearch,
     clearFilters
   } = useFilters()
@@ -67,9 +64,7 @@ export const SearchPage = () => {
   const handleSemtimentChange = useCallback((value: string) => {
     setSentiment(value)
   }, [setSentiment]);
-  const handleSentimentLimitChange = useCallback((value: number) => {
-    setSentimentLimit(value)
-  }, [setSentimentLimit])
+  
   const handleIndustryChange = useCallback((value: string) => {
     setIndustry(value)
   }, [setIndustry]);

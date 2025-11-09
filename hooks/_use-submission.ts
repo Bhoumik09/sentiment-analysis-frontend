@@ -10,6 +10,7 @@ export interface SubmissionFilters {
   sentimentScoreLimit: number;
   industry: string;
   search: string;
+  companyId: string;
 }
 const DEFAULT_FILTERS: SubmissionFilters = {
   page: 1,
@@ -18,6 +19,7 @@ const DEFAULT_FILTERS: SubmissionFilters = {
   sentiment: "all",
   sentimentScoreLimit: -1,
   industry: "all",
+  companyId: "",
 };
 export const useFilters = () => {
   const router = useRouter();
@@ -32,6 +34,8 @@ export const useFilters = () => {
         Number(searchParams.get("sentimentScoreLimit")) ||
         DEFAULT_FILTERS.sentimentScoreLimit,
       industry: searchParams.get("industry") || DEFAULT_FILTERS.industry,
+      companyId:
+        searchParams.get("companyId") || DEFAULT_FILTERS.companyId,
     };
   }, [searchParams]);
   //below is the good exmaple of loose initilization, react only runs the function on first render
@@ -108,6 +112,10 @@ export const useFilters = () => {
     (industry: string) => updateFilters({ industry: industry }),
     [updateFilters]
   );
+  const setCompanyId = useCallback(
+    (companyId: string) => updateFilters({ companyId: companyId }),
+    [updateFilters]
+  );
   const hasActiveFilters =
     filters.search !== DEFAULT_FILTERS.search ||
     filters.industry !== DEFAULT_FILTERS.industry ||
@@ -152,6 +160,7 @@ export const useFilters = () => {
     setIndustry,
     setSentimentLimit,
     setSentiment,
+    setCompanyId,
   };
 
 };

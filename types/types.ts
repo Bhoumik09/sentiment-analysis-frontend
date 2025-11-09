@@ -57,12 +57,14 @@ export type CompanyRecentNewsType = {
   
 };
 export interface sentimentTrendAvg {
-  current_month: number;
-  previous_month: number;
-  twoMonthsEarlier: number;
-  threeMonthsEarlier: number;
-  fourMonthsEarlier: number;
-  fiveMonthsEarlier: number;
+  sentiments:{
+    "companyId":string;
+    "companyName":string;
+    "stats":{
+      "time_bucket":Date;
+      "avgSentiment":number;
+    }[]
+  }[]
 }
 export interface StartupResult {
   id: string;
@@ -86,7 +88,9 @@ export interface NewsPaginatedDataType {
   ArticlesSentiment: {
     id: string;
     sentiment: string;
-    sentimentScore: number;
+    positiveScore: number;
+    negativeScore:number;
+    neutralScore:number;
     Startups: {
       id: string;
       name: string;

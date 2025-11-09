@@ -27,43 +27,17 @@ import {
 } from "recharts"
 import { FadeIn, ScaleIn, StaggerChildren } from "@/components/gsap-animations"
 import { CompanyIntroType, CompanySentimentInfoType } from "@/types/types"
-import { fetchCompanyInformation, fetchCompanyOverview } from "@/app/actions/companyInfo"
+import { fetchAnalysisTrend, fetchCompanyInformation, fetchCompanyOverview } from "@/app/actions/companyInfo"
 import { useFilters } from "@/hooks/_use-submission"
 import { getPaginatedCompanies, getPaginatedNews } from "@/app/actions/searchPage"
 import Cookies from "js-cookie"
 import { NewsResults } from "@/components/news-list"
-import { calculatePaginationWindow } from "@/lib/helper"
+import { calculatePaginationWindow, generateRandomHslColor } from "@/lib/helper"
+import { string } from "zod"
 // Mock data
+
 const mockCompanyData = {
-  id: "1",
-  name: "Swiggy",
-  sector: "Food Delivery",
-  imageUrl: "/food-delivery-startup-logo.jpg",
-  description:
-    "Leading online food delivery platform revolutionizing the way Indians order food with innovative technology and exceptional service quality.",
-  founded: "2014",
-  employees: "5000+",
-  funding: "$1.3B+ Series J",
-  website: "https://swiggy.com",
-  headquarters: "Bangalore, India",
-  keyMetrics: {
-    avgSentiment: 0.65,
-    totalArticles: 245,
-    positiveArticles: 159,
-    neutralArticles: 61,
-    negativeArticles: 25,
-    trendDirection: "up",
-  },
-  sentimentStats: {
-    positive: { count: 159, percentage: 65, avgScore: 0.82 },
-    neutral: { count: 61, percentage: 25, avgScore: 0.0 },
-    negative: { count: 25, percentage: 10, avgScore: -0.71 },
-  },
-  sentimentDistribution: [
-    { name: "Positive", value: 65, color: "#10b981" },
-    { name: "Neutral", value: 25, color: "#f59e0b" },
-    { name: "Negative", value: 10, color: "#ef4444" },
-  ],
+  
   sentimentTrend: [
     { date: "2024-01", sentiment: 0.35, articles: 32 },
     { date: "2024-02", sentiment: 0.42, articles: 38 },
@@ -72,46 +46,26 @@ const mockCompanyData = {
     { date: "2024-05", sentiment: 0.62, articles: 48 },
     { date: "2024-06", sentiment: 0.65, articles: 50 },
   ],
-  sectorComparison: [
-    { date: "2024-01", swiggy: 0.35, zomato: 0.42, blinkit: 0.45 },
-    { date: "2024-02", swiggy: 0.42, zomato: 0.38, blinkit: 0.5 },
-    { date: "2024-03", swiggy: 0.38, zomato: 0.45, blinkit: 0.48 },
-    { date: "2024-04", swiggy: 0.58, zomato: 0.52, blinkit: 0.55 },
-    { date: "2024-05", swiggy: 0.62, zomato: 0.55, blinkit: 0.58 },
-    { date: "2024-06", swiggy: 0.65, zomato: 0.6, blinkit: 0.62 },
-  ],
-  recentNews: Array.from({ length: 12 }, (_, i) => ({
-    id: i + 1,
-    title: `Swiggy ${i % 3 === 0 ? "announces expansion" : i % 3 === 1 ? "launches new feature" : "wins award"} - ${i + 1}`,
-    source: ["TechCrunch", "Economic Times", "Business Standard"][i % 3],
-    sentiment: [0.8, 0.5, -0.4, 0.7, 0.3, -0.2][i % 6],
-    publishedAt: `2024-06-${15 - i}`,
-    url: "#",
-    summary:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-  })),
+  
 }
 
-const ITEMS_PER_PAGE = 5
 interface CompanyDashboardProps {
   companyInfo: CompanyIntroType
   sentimentInfo: CompanySentimentInfoType
   companyId: string;
 }
 export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: CompanyDashboardProps) {
-  const [currentPage, setCurrentPage] = useState(1)
-  const params = useParams();
-  const searchParams = useSearchParams()
+  const [sentimentTrendRange,_] = useState<"monthly"|"weekly">("monthly");
   const router = useRouter();
   const authToken = Cookies.get('user-token');
   const {
     setPage,
     getApiParams,
-    
+
     filters
-  }=useFilters();
-    
-  
+  } = useFilters();
+
+
   const { data: companyDataQuery } = useQuery({
     queryKey: ['companyInfo', companyId],
     queryFn: () => fetchCompanyInformation(companyId),
@@ -127,19 +81,63 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
     staleTime: 5 * 60 * 1000,
     placeholderData: keepPreviousData
   })
-   const { data: companyNewsQuery,isLoading:isCompanyNewsLoading } = useQuery({
-    queryKey: ['paginatedNews',getApiParams()],
-    queryFn: () =>getPaginatedNews({ userToken: authToken, ...getApiParams(), searchQuery:companyDataQuery.companyData?.name }),
-    staleTime: 5 * 60 *1000,
+  const { data: companyNewsQuery, isLoading: isCompanyNewsLoading } = useQuery({
+    queryKey: ['paginatedNews', getApiParams(),companyId],
+    queryFn: () => getPaginatedNews({ userToken: authToken, ...getApiParams(),companyId  }),
+    staleTime: 5 * 60 * 1000,
     placeholderData: keepPreviousData,
-    enabled:!!companyDataQuery.companyData
-  })
-  
+    enabled: !!companyDataQuery.companyData,
+  });
+
+  const { data: companySentimentAvgTrend, isSuccess } = useQuery({
+    queryKey: ['company-avg-sentiment-trend', companyInfo!.companyOverview?.sectorId],
+    queryFn:()=>fetchAnalysisTrend(companyInfo!.companyOverview?.sectorId!.toString() ),
+    staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
+    
+    enabled: !!companyDataQuery.companyData,
+  });
+  const pivotSentimentData=useMemo(():{date:string; [companyName:string]:number|string}[]=>{
+    const dateMap=new Map();
+    if(!companySentimentAvgTrend?.sentiments){
+      return [{date:new Date().toString(),'no-data':0}];
+    }
+    for(let sentimentAvgData of companySentimentAvgTrend.sentiments){
+      const companyKey:string=sentimentAvgData.companyName.toLowerCase();
+      for(let stats of sentimentAvgData.stats){
+        let timeBucket:string|undefined="";
+        if(sentimentTrendRange==='monthly'){
+         timeBucket=new Intl.DateTimeFormat('en-US',{month :'long',year:'2-digit'}).format(new Date(stats.time_bucket));
+        }else{
+         timeBucket=new Intl.DateTimeFormat('en-US',{month :'short', day:'2-digit'}).format(new Date(stats.time_bucket));
+
+        }
+        if(!dateMap.has(timeBucket)){
+          dateMap.set(timeBucket,{date:timeBucket})
+        }
+        dateMap.get(timeBucket)[companyKey]=stats.avgSentiment
+        
+      }
+    }
+    const sectorComparison:{date:string; [companyName:string]:number|string}[]=Array.from(dateMap.values());
+    return sectorComparison;
+  } ,[isSuccess, companySentimentAvgTrend])
+  const companyKeysAndColor=useMemo(()=>{
+    if(!pivotSentimentData || pivotSentimentData.length===0){
+      return [{key:"no-data", color:generateRandomHslColor()}];
+    }
+    const allKeys=new Set(pivotSentimentData.flatMap(data=>Object.keys(data)));
+    allKeys.delete('date');
+    const arr=Array.from(allKeys).map((key, index)=>(
+      {key,color:generateRandomHslColor()}
+    ));
+    return arr;
+  },[pivotSentimentData])
   const getPagesList = useMemo(() => {
-      if(!companyNewsQuery)return[1];
-      return calculatePaginationWindow(filters.page, companyNewsQuery.paginationInfo?.totalPages ? companyNewsQuery.paginationInfo?.totalPages : 1);
-    }, [filters.page,companyNewsQuery]);
-  
+    if (!companyNewsQuery) return [1];
+    return calculatePaginationWindow(filters.page, companyNewsQuery.paginationInfo?.totalPages ? companyNewsQuery.paginationInfo?.totalPages : 1);
+  }, [filters.page, companyNewsQuery]);
+
 
   const getSentimentColor = (sentiment: number | undefined) => {
 
@@ -155,15 +153,27 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
     if (sentiment < -0.1) return "Negative"
     return "Neutral"
   }
-  const percentageandTotal= useMemo(():{positive:number, neutral:number, negative:number, totalArticles:number} => {
-    if (!sentimentDataQuery) return { positive: 0, neutral: 0, negative: 0,totalArticles:0 };
+  const percentageandTotal = useMemo((): { positive: number, neutral: number, negative: number, totalArticles: number } => {
+    if (!sentimentDataQuery) return { positive: 0, neutral: 0, negative: 0, totalArticles: 0 };
     const total: number = sentimentDataQuery.sentimentStats.reduce((acc, stat) => acc + stat.sentimentCount, 0);
     const postivePercent: number = (sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "positive")?.sentimentCount || 0) / total * 100;
     const neutralPercent: number = (sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "neutral")?.sentimentCount || 0) / total * 100;
     const negativePercent: number = (sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "negative")?.sentimentCount || 0) / total * 100;
-    return { positive: postivePercent, neutral: neutralPercent, negative: negativePercent , totalArticles: total};
+    return { positive: postivePercent, neutral: neutralPercent, negative: negativePercent, totalArticles: total };
   }, [sentimentDataQuery])
-
+  const sentimentStats = useMemo(() => {
+    
+    if (!sentimentDataQuery.sentimentStats) {
+      return [{ name: "Positive", value: 0, color: "#10b981" },
+      { name: "Neutral", value: 0, color: "#f59e0b" },
+      { name: "Negative", value: 0, color: "#ef4444" },]
+    }
+    const sentimentArr =  [{ name: "Positive", value: Number(percentageandTotal.positive.toFixed(2)), color: "#98FB98" },
+      { name: "Neutral", value: Number(percentageandTotal.neutral.toFixed(2)), color: "#FFD700" },
+      { name: "Negative", value: Number(percentageandTotal.negative.toFixed(2)), color: "#D8BFD8" },]
+    
+    return sentimentArr;
+  }, [percentageandTotal])
   return (
     <div className=" bg-background">
       <Button
@@ -197,7 +207,7 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                         {companyDataQuery.companyData?.sector.name}
                       </Badge>
                       <Badge className={`${getSentimentColor(companyDataQuery.avgSentiment)} bg-white/10`}>
-                        {getSentimentLabel(mockCompanyData.keyMetrics.avgSentiment)}
+                        {getSentimentLabel(companyDataQuery.avgSentiment)}
                       </Badge>
                     </div>
                   </div>
@@ -241,7 +251,7 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                         </div>
                         <h3 className="text-sm font-medium text-muted-foreground mb-2">Positive Sentiment</h3>
                         <p className="text-3xl font-bold text-green-500 mb-2">
-                          {sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "positive")?.sentimentCount}
+                          {sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "positive")?.sentimentCount??0}
                         </p>
 
                       </CardContent>
@@ -260,7 +270,7 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                         </div>
                         <h3 className="text-sm font-medium text-muted-foreground mb-2">Neutral Sentiment</h3>
                         <p className="text-3xl font-bold text-green-500 mb-2">
-                          {sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "neutral")?.sentimentCount}
+                          {sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "neutral")?.sentimentCount??0}
                         </p>
 
                       </CardContent>
@@ -279,7 +289,7 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                         </div>
                         <h3 className="text-sm font-medium text-muted-foreground mb-2">Negative Sentiment</h3>
                         <p className="text-3xl font-bold text-green-500 mb-2">
-                          {sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "negative")?.sentimentCount}
+                          {sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "negative")?.sentimentCount??0}
                         </p>
 
                       </CardContent>
@@ -330,12 +340,12 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <NewsResults results={companyNewsQuery?.paginatedNews??[]} loading={isCompanyNewsLoading}/>
+                  <NewsResults results={companyNewsQuery?.paginatedNews ?? []} loading={isCompanyNewsLoading} />
                   <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setPage (Math.max(1, filters.page - 1))}
+                      onClick={() => setPage(Math.max(1, filters.page - 1))}
                       disabled={filters.page === 1}
                       className="gap-2"
                     >
@@ -358,7 +368,7 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setPage (Math.min(companyNewsQuery?.paginationInfo?.totalPages!,  filters.page + 1))}
+                      onClick={() => setPage(Math.min(companyNewsQuery?.paginationInfo?.totalPages!, filters.page + 1))}
                       disabled={filters.page === companyNewsQuery?.paginationInfo?.totalPages}
                       className="gap-2"
                     >
@@ -383,25 +393,23 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                     </CardHeader>
                     <CardContent>
                       <div className="h-[300px] w-full flex items-center justify-center">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" >
                           <PieChart>
                             <Pie
-                              data={mockCompanyData.sentimentDistribution}
+                              data={sentimentStats}
                               cx="50%"
                               cy="50%"
-                              innerRadius={60}
+                              
+                              innerRadius={50}
                               outerRadius={100}
                               dataKey="value"
-                              label={({ name, value }: { name: string; value: number }) => `${name} ${value}%`}
+                              label={({name,value }: { name: string; value: number }) => `${name} ${value}%`}
                             >
-                              {mockCompanyData.sentimentDistribution.map((entry, index) => (
+                              {sentimentStats.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={entry.color} />
                               ))}
                             </Pie>
-                            <Tooltip
-                              contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid #06b6d4" }}
-                              formatter={(value: number) => `${value}%`}
-                            />
+                            
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
@@ -421,7 +429,7 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                     <CardContent>
                       <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={mockCompanyData.sectorComparison}>
+                          <AreaChart data={pivotSentimentData}>
                             <defs>
                               <linearGradient id="colorSwiggy" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
@@ -435,7 +443,16 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                               contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid #06b6d4" }}
                             />
                             <Legend />
-                            <Area
+                            {companyKeysAndColor?.map((pivotData)=>(
+                              <Area
+                              type="monotone"
+                              dataKey={pivotData.key}
+                              stroke="#06b6d4"
+                              fill={pivotData.color}
+                              name={pivotData.key}
+                            />
+                            )) }
+                            {/* <Area
                               type="monotone"
                               dataKey="swiggy"
                               stroke="#06b6d4"
@@ -457,7 +474,7 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                               fill="#ec4899"
                               fillOpacity={0.1}
                               name="Blinkit"
-                            />
+                            /> */}
                           </AreaChart>
                         </ResponsiveContainer>
                       </div>

@@ -73,18 +73,19 @@ export const fetchSentimentTrend = async (
 };
 
 export const fetchAnalysisTrend = async (
-  companyId: string
-): Promise<{ month: Date; articleCount: number }[]> => {
+  sectorId: string
+): Promise<sentimentTrendAvg> => {
     const cookieStore = cookies();
-
+    const params = new URLSearchParams();
+    params.append("infoRangeType", 'monthly');
   const authToken = cookieStore.get("user-token")?.value;
   const response = await axios.get(
-    `${api}/company/company-analysis-trend/${companyId}`,
+    `${api}/company/sentiment-trend/${sectorId}?${params.toString()}`,
     {
       headers: {
         Authorization: `Bearer ${authToken} `,
       },
     }
   );
-  return response.data as { month: Date; articleCount: number }[];
+  return response.data as  sentimentTrendAvg;
 };

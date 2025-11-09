@@ -1,19 +1,16 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { TrendingUp, TrendingDown, Minus, ExternalLink, Calendar, BarChart3, ArrowRight } from "lucide-react"
+import { BarChart3, ArrowRight } from "lucide-react"
 import { StartupResult, } from "@/types/types"
-import { formatDistanceToNow } from 'date-fns';
 import { getSentiment, getSentimentBadgeColor, getSentimentColor } from "@/lib/helper"
 import { getSentimentIcon } from "./sentiment-Icon"
 import { Avatar } from "./ui/avatar"
 import Image from "next/image"
 import { Skeleton } from "./ui/skeleton"
+import { neutralLimit } from "@/lib/constants"
 
 
 
@@ -63,9 +60,9 @@ export function SearchResults({ results, loading }: SearchResultsProps) {
     )
   }
   const getCardBorder = (sentimentScores: number) => {
-    if (sentimentScores >= 0.03) {
+    if (sentimentScores >= neutralLimit) {
       return "border-l-green-400"
-    } else if (sentimentScores <= -.03) {
+    } else if (sentimentScores <= -neutralLimit) {
       return "border-l-red-400"
     } else {
       return "border-l-amber-400"

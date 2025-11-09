@@ -123,3 +123,10 @@
     @apply bg-background text-foreground;
   }
 }
+.pie-chart-container {
+  /* Tilts the chart back by 55 degrees along the X-axis */
+  transform: rotateX(55deg);
+
+  /* You can adjust the perspective to enhance the "3D" feel */
+  perspective: 1000px;
+}
