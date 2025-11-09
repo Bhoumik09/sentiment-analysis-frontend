@@ -71,6 +71,7 @@ export function SearchResults({ results, loading }: SearchResultsProps) {
   return (
     <div className="grid xl:grid-cols-3 md:grid-cols-2  sm:grid-cols-1 gap-6 max-sm:py-2 ">
       {results.map((result) => (
+        
         <Card
           key={result.id}
           className={` backdrop-blur-sm   border-l-6 ${getCardBorder(result.avg_sentiment_score)} transition-all duration-200 group cursor-pointer`}

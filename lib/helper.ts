@@ -1,8 +1,8 @@
 import { neutralLimit } from "./constants";
 
 export const getSentimentColor = (setimentNumber: number | null = null) => {
-  if (setimentNumber && setimentNumber > neutralLimit) return "text-green-500";
-  if (setimentNumber && setimentNumber < -neutralLimit) return "text-red-500";
+  if (setimentNumber && setimentNumber >= neutralLimit) return "text-green-500";
+  if (setimentNumber && setimentNumber <= -neutralLimit) return "text-red-500";
   return "text-yellow-500";
 };
 export const getSentimentBgColor = (setimentType: string) => {
@@ -18,13 +18,13 @@ export const getSentimentBgColor = (setimentType: string) => {
   }
 };
 export const getSentiment = (value: number) => {
-  if (value > neutralLimit) return "Positive";
-  else if (value < -neutralLimit) return "Negative";
+  if (value >= neutralLimit) return "Positive";
+  else if (value <= -neutralLimit) return "Negative";
   else return "Neutral";
 };
 export const getSentimentBadgeColor = (value: number) => {
-  if (value > neutralLimit) return "bg-green-500/20 text-green-500 border-green-500/30";
-  else if (value < neutralLimit) return "bg-red-500/20 text-red-500 border-red-500/30";
+  if (value >= neutralLimit) return "bg-green-500/20 text-green-500 border-green-500/30";
+  else if (value <= -neutralLimit) return "bg-red-500/20 text-red-500 border-red-500/30";
   else return "bg-yellow-500/20 text-yellow-500 border-yellow-500/30";
 };
 
