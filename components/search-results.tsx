@@ -78,8 +78,8 @@ export function SearchResults({ results, loading }: SearchResultsProps) {
           onClick={() => handleStartupClick(result.id, result.name)}
         >
           <CardHeader>
-            <Avatar className="m-auto xl:size-30 size-20  bg-blue-200" >
-              <Image src={result.image_url || '/default-startup.png'} alt={result.name} height={20} width={20} />
+            <Avatar className="m-auto xl:size-30 size-20  bg-blue-200 rounded-lg" >
+              <Image src={result.imageUrl!=null ?result.imageUrl!:"/company-default.jpg"} alt={result.name} fill className="w-full h-full" />
             </Avatar>
           </CardHeader>
           <CardContent>
@@ -100,7 +100,7 @@ export function SearchResults({ results, loading }: SearchResultsProps) {
                 </span>
               </div>
             </div>
-            <div className="text-neutral-400">
+            <div className="text-neutral-400 line-clamp-6">
               {result.description}
 
             </div>

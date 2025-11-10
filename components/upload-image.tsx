@@ -98,7 +98,6 @@ export function UploadImage() {
       {imageUrl && (
         <div>
           <p>Upload successful!</p>
-          <Image src={imageUrl} alt="Uploaded image" width={300} height={300} className="rounded-xl" />
         </div>
       )}
       <div className="flex gap-2">

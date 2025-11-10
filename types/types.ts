@@ -2,36 +2,8 @@ import {
   fetchDashboardData,
   fetchTrendingStartups,
 } from "@/app/actions/dashboardAnalytics";
-import { WeekNumberLabel } from "react-day-picker";
 
-export type TrendingStartups = {
-  startupId: string;
-  name: string;
-  current_sentiment: number;
-};
-export type dashboardAnalyticsType = {
-  totalStartups: number;
-  startUpAnalytics: number;
-  statusGrouping: {
-    postiveCount: number;
-    negativeCount: number;
-    neutralCount: number;
-    totalCount: number;
-  };
-  positiveTrendArticles: number;
-  negativeTrendArticles: number;
-  avgSentiment: number;
-};
-export type StartupWithStats = {
-  id: string;
-  name: string;
-  sector: string;
-  total_articles: number | null;
-  avg_sentiment_score: number | null;
-  latest_article_title: string | null;
-  latest_article_url: string | null;
-  latest_article_published_at: Date | null;
-};
+
 export type CompanyIntroType ={
   companyOverview: {
     sector: {
@@ -53,9 +25,6 @@ export type CompanySentimentInfoType = {
       sentimentCount: number;
   }[]
 };
-export type CompanyRecentNewsType = {
-  
-};
 export interface sentimentTrendAvg {
   sentiments:{
     "companyId":string;
@@ -73,7 +42,7 @@ export interface StartupResult {
   description: string;
   total_articles: number | null;
   avg_sentiment_score: number;
-  image_url: string | null;
+  imageUrl: string | null;
 }
 export interface StartupInfo {
   id: string;

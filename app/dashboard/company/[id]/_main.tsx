@@ -34,6 +34,7 @@ import Cookies from "js-cookie"
 import { NewsResults } from "@/components/news-list"
 import { calculatePaginationWindow, generateRandomHslColor } from "@/lib/helper"
 import { string } from "zod"
+import { neutralLimit } from "@/lib/constants"
 // Mock data
 
 const mockCompanyData = {
@@ -142,15 +143,15 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
   const getSentimentColor = (sentiment: number | undefined) => {
 
     if (sentiment === undefined) return "text-gray-500"
-    if (sentiment > 0.1) return "text-green-500"
-    if (sentiment < -0.1) return "text-red-500"
+    if (sentiment > neutralLimit) return "text-green-500"
+    if (sentiment < -neutralLimit) return "text-red-500"
     return "text-yellow-500"
   }
 
   const getSentimentLabel = (sentiment: number | undefined) => {
     if (sentiment === undefined) return "Unknown"
-    if (sentiment > 0.1) return "Positive"
-    if (sentiment < -0.1) return "Negative"
+    if (sentiment > neutralLimit) return "Positive"
+    if (sentiment < -neutralLimit) return "Negative"
     return "Neutral"
   }
   const percentageandTotal = useMemo((): { positive: number, neutral: number, negative: number, totalArticles: number } => {
@@ -192,7 +193,7 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
               {/* Company Image */}
               <div className="lg:flex-shrink-0 max-lg:m-auto">
                 <img
-                  src={companyDataQuery.companyData?.imageUrl || "/placeholder.svg"}
+                  src={companyDataQuery.companyData?.imageUrl ?? "/company-default.jpg"}
                   alt={companyDataQuery.companyData?.name}
                   className="w-40 h-40 rounded-2xl border-2 border-accent/30 object-cover"
                 />
