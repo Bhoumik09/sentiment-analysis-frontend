@@ -67,11 +67,38 @@ export const SearchPage = () => {
     else setPage(filters.page - 1)
   }, [setPage]);
   const industryOptions = useMemo(() => [
-    { value: 'all', label: 'All Industries' },
-    { value: 'Fintech', label: 'Fintech' },
-    { value: 'Technical', label: 'Technical' },
-    { value: 'Medical', label: 'Medical' }
-  ], [])
+  { value: 'all', label: 'All Industries' },
+  { value: 'Fintech', label: 'Fintech' },
+  { value: 'EdTech', label: 'EdTech' },
+  { value: 'HealthTech', label: 'HealthTech' },
+  { value: 'E-commerce', label: 'E-commerce' },
+  { value: 'SaaS', label: 'SaaS' },
+  { value: 'AI', label: 'AI' },
+  { value: 'AgriTech', label: 'AgriTech' },
+  { value: 'Logistics', label: 'Logistics' },
+  { value: 'EV', label: 'EV' },
+  { value: 'Gaming', label: 'Gaming' },
+  { value: 'Biotech', label: 'Biotech' },
+  { value: 'CleanTech', label: 'CleanTech' },
+  { value: 'Media', label: 'Media' },
+  { value: 'D2C', label: 'D2C' },
+  { value: 'RetailTech', label: 'RetailTech' },
+  { value: 'HRTech', label: 'HRTech' },
+  { value: 'MarTech', label: 'MarTech' },
+  { value: 'Web3', label: 'Web3' },
+  { value: 'Blockchain', label: 'Blockchain' },
+  { value: 'Data Analytics', label: 'Data Analytics' },
+  { value: 'Enterprise Software', label: 'Enterprise Software' },       
+  { value: 'Mobility', label: 'Mobility' },
+  { value: 'SpaceTech', label: 'SpaceTech' },
+  { value: 'Hardware', label: 'Hardware' },
+  { value: 'DroneTech', label: 'DroneTech' },
+  { value: 'Social Media', label: 'Social Media' },
+  { value: 'Cybersecurity', label: 'Cybersecurity' },
+  { value: 'FoodTech', label: 'FoodTech' },
+  { value: 'Quick Commerce', label: 'Quick Commerce' },
+  { value: 'PropTech', label: 'PropTech' }
+], [])
   const setimentOptions = useMemo(() => [
     { value: 'all', label: 'All Sentiments' },
     { value: 'positive', label: 'PostiveSentiment' },
