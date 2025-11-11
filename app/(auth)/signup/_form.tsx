@@ -183,26 +183,6 @@ export const SignupForm: React.FC = () => {
                                     </Button>
                                 </div>
                             </div>
-
-                            <div className="flex items-center space-x-2">
-                                <input
-                                    id="terms"
-                                    type="checkbox"
-                                    className="rounded border-border text-accent focus:ring-accent"
-                                    required
-                                />
-                                <Label htmlFor="terms" className="text-sm text-muted-foreground">
-                                    I agree to the{" "}
-                                    <Link href="/terms" className="text-accent hover:text-accent/80">
-                                        Terms of Service
-                                    </Link>{" "}
-                                    and{" "}
-                                    <Link href="/privacy" className="text-accent hover:text-accent/80">
-                                        Privacy Policy
-                                    </Link>
-                                </Label>
-                            </div>
-
                             {!isPending ? <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2.5">
                                 Create Account
                             </Button> : <Button type="button" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2.5" disabled>

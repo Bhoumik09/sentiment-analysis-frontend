@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { WaterflowBackground } from "@/components/waterflow-background"
 import { LiquidGlassNavbar } from "@/components/liquid-glass-navbar"
 import { Eye, EyeOff, Mail, Lock, TrendingUp, LoaderPinwheel } from "lucide-react"
 import { useMutation } from "@tanstack/react-query"
@@ -131,22 +130,6 @@ export function LoginForm() {
                                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                     </Button>
                                 </div>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-2">
-                                    <input
-                                        id="remember"
-                                        type="checkbox"
-                                        className="rounded border-border text-accent focus:ring-accent"
-                                    />
-                                    <Label htmlFor="remember" className="text-sm text-muted-foreground">
-                                        Remember me
-                                    </Label>
-                                </div>
-                                <Link href="/forgot-password" className="text-sm text-accent hover:text-accent/80">
-                                    Forgot password?
-                                </Link>
                             </div>
                             {isPending ?<Button type="submit" className="w-full gap-2 flex bg-primary hover:bg-primary/90 text-primary-foreground py-2.5"disabled>
                                <LoaderPinwheel className="animate-spin"/>
