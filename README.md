@@ -1,5 +1,3 @@
-
-
 # Startup Sentiment Analysis Platform
 
 A full-stack, microservice-based intelligence platform to track, analyze, and visualize news sentiment for competing startups.
@@ -13,8 +11,25 @@ This project is not just a simple sentiment-tracker. It's a complete data pipeli
 **Frontend Repo:** [Bhoumik09/sentiment-analysis-frontend](https://www.google.com/search?q=https://github.com/Bhoumik09/sentiment-analysis-frontend)
 **Backend Repo:** [Bhoumik09/sentiment-analysis-backend](https://www.google.com/search?q=https://github.com/Bhoumik09/sentiment-analysis-backend)
 
+**1)Login Page**
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/7aecf42a-f5fb-4ef5-a841-451212b8f235" />
 
+**2)Signup Page**
+<img width="965" height="861" alt="image" src="https://github.com/user-attachments/assets/6e5503cc-b6f1-40be-91a2-6f248c68debb" />
 
+**3)Sentiment Dashboard**
+<img width="1836" height="931" alt="image" src="https://github.com/user-attachments/assets/8b4b3346-ef40-44e3-abc8-532c644368b6" />
+
+**4)Company List enabled with robust filters and search bar**
+<img width="1517" height="912" alt="image" src="https://github.com/user-attachments/assets/07fde588-70d7-4ddd-bb4a-5e51bda7aa85" />
+
+**5)News List enabled with robust filters and search bar**
+<img width="1526" height="908" alt="image" src="https://github.com/user-attachments/assets/c5ba50c6-f8ee-44f8-829e-b05ea4dadb2b" />
+
+**6)Company Specific Pages**
+<img width="1777" height="882" alt="image" src="https://github.com/user-attachments/assets/bf58a41a-b89d-4973-a5a2-4adfa7611c68" />
+<img width="1787" height="916" alt="image" src="https://github.com/user-attachments/assets/0a0f37b5-6860-48d0-8ab4-c13b51838e57" />
+<img width="1831" height="937" alt="image" src="https://github.com/user-attachments/assets/fcda5613-972b-4d1a-b8f1-97386b2bfdc7" />
 ## 📊 Core Features
 
   * **Trending Dashboards:** See the top 4 startups of the week based on **article volume** and the top 4 "Sentiment Movers" based on **percentage sentiment change**.
@@ -33,7 +48,7 @@ The frontend uses **React Query (TanStack Query)** for all data fetching.
 
   * **Caching:** API calls (e.g., for the trending startups, the main article feed) are cached. If the user navigates away and comes back, the data is served instantly from cache while a fresh fetch runs silently in the background.
   * **Reduced API Calls:** This drastically reduces the number of requests to the backend, making the app feel faster and reducing server load.
-  * **State Management:** It eliminates the need for complex global state (like Redux) for server state, simplifying the codebase.
+  * **State Management:** It eliminates the need for complex global state (like Redux) for server state, simplifying the codebase.'
 
 ### 2\. Efficient Searching & Pagination
 
@@ -143,23 +158,5 @@ To run the full system, you must run all three components (Database, Backend, Fr
 
 ### 4\. ETL Service (Python)
 
-1.  In a **new terminal**, set up your Python environment.
-2.  Install dependencies:
-    ```sh
-    pip install -r requirements.txt 
-    # (Create this file with: transformers, torch, pyahocorasick, psycopg2-binary, etc.)
-    ```
-3.  Create a `.env` file for the Python script:
-    ```.env
-    DB_NAME="sentiment_db"
-    DB_USER="YOUR_USER"
-    DB_PASSWORD="YOUR_PASSWORD"
-    DB_HOST="localhost"
-    NEWS_API_KEY="your-news-api-key"
-    ```
-4.  Run the `addStartups.py` script once to populate the `Startups` table.
-5.  Run the main ETL script to fetch and analyze articles:
-    ```sh
-    python main_etl.py
-    ```
-6.  Once the script finishes, refresh your browser at `http://localhost:3000` to see the new data.
+Refer Repo **https://github.com/SoumilMalik24/SentimentFlow-V2** by **github.com/SoumilMalik24**
+
