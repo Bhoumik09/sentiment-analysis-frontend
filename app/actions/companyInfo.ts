@@ -2,7 +2,6 @@
 import { api } from "@/lib/constants";
 import {
   CompanyIntroType,
-  CompanyRecentNewsType,
   CompanySentimentInfoType,
   sentimentTrendAvg,
 } from "@/types/types";
@@ -39,45 +38,16 @@ export const fetchCompanyOverview = async (
   return response.data as  CompanySentimentInfoType ;
 };
 
-export const fetchRecentNews = async (
-  companyId: string
-): Promise<{ recentNews: CompanyRecentNewsType[] }> => {
-    const cookieStore = cookies();
 
-  const authToken = cookieStore.get("user-token")?.value;
 
-  const response = await axios.get(`${api}/company/recent-news/${companyId}`, {
-    headers: {
-      Authorization: `Bearer ${authToken} `,
-    },
-  });
-  return response.data as { recentNews: CompanyRecentNewsType[] };
-};
-
-export const fetchSentimentTrend = async (
-  companyId: string
-): Promise<{ sentimentTrendOverPeriod: sentimentTrendAvg }> => {
-    const cookieStore = cookies();
-
-  const authToken = cookieStore.get("user-token")?.value;
-
-  const response = await axios.get(
-    `${api}/company/sentiment-trend/${companyId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${authToken} `,
-      },
-    }
-  );
-  return response.data as { sentimentTrendOverPeriod: sentimentTrendAvg };
-};
 
 export const fetchAnalysisTrend = async (
-  sectorId: string
+  sectorId: string,
+  infoRangeType:"weekly"|"monthly"
 ): Promise<sentimentTrendAvg> => {
     const cookieStore = cookies();
     const params = new URLSearchParams();
-    params.append("infoRangeType", 'monthly');
+    params.append("infoRangeType", infoRangeType);
   const authToken = cookieStore.get("user-token")?.value;
   const response = await axios.get(
     `${api}/company/sentiment-trend/${sectorId}?${params.toString()}`,

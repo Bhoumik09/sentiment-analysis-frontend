@@ -17,6 +17,13 @@ export const getSentimentBgColor = (setimentType: string) => {
       return "bg-gray-500/10";
   }
 };
+
+ export  const getSentimentLabel = (sentiment: number | undefined) => {
+    if (sentiment === undefined) return "Unknown"
+    if (sentiment > neutralLimit) return "Positive"
+    if (sentiment < -neutralLimit) return "Negative"
+    return "Neutral"
+  }
 export const getSentiment = (value: number) => {
   if (value >= neutralLimit) return "Positive";
   else if (value <= -neutralLimit) return "Negative";

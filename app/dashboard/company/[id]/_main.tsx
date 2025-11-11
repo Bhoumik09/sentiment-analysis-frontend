@@ -32,13 +32,15 @@ import { useFilters } from "@/hooks/_use-submission"
 import { getPaginatedCompanies, getPaginatedNews } from "@/app/actions/searchPage"
 import Cookies from "js-cookie"
 import { NewsResults } from "@/components/news-list"
-import { calculatePaginationWindow, generateRandomHslColor } from "@/lib/helper"
+import { calculatePaginationWindow, generateRandomHslColor, getSentimentLabel } from "@/lib/helper"
 import { string } from "zod"
 import { neutralLimit } from "@/lib/constants"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime"
 // Mock data
 
 const mockCompanyData = {
-  
+
   sentimentTrend: [
     { date: "2024-01", sentiment: 0.35, articles: 32 },
     { date: "2024-02", sentiment: 0.42, articles: 38 },
@@ -47,7 +49,7 @@ const mockCompanyData = {
     { date: "2024-05", sentiment: 0.62, articles: 48 },
     { date: "2024-06", sentiment: 0.65, articles: 50 },
   ],
-  
+
 }
 
 interface CompanyDashboardProps {
@@ -56,17 +58,19 @@ interface CompanyDashboardProps {
   companyId: string;
 }
 export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: CompanyDashboardProps) {
-  const [sentimentTrendRange,_] = useState<"monthly"|"weekly">("monthly");
-  const router = useRouter();
-  const authToken = Cookies.get('user-token');
+  const [sentimentTrendRange, setSentimentTrendRange] = useState<"monthly" | "weekly">("monthly");
+  const sentimentOptions: { value: string; label: string; }[] = [
+    { value: 'monthly', label: 'Monthly' },
+    { value: 'weekly', label: 'Weekly' },
+  ];
+  const router: AppRouterInstance = useRouter();
+  const authToken: string | undefined = Cookies.get('user-token');
   const {
     setPage,
     getApiParams,
-
     filters
   } = useFilters();
-
-
+  //Query for companies basic info like name , description , average sentiment etc
   const { data: companyDataQuery } = useQuery({
     queryKey: ['companyInfo', companyId],
     queryFn: () => fetchCompanyInformation(companyId),
@@ -74,7 +78,8 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
     select: (data) => ({ companyData: data?.companyOverview, avgSentiment: data?.avgSentiment }),
     staleTime: 5 * 60 * 1000,
     placeholderData: keepPreviousData
-  })
+  });
+  // Query to fetch count of positve , negative and neutral
   const { data: sentimentDataQuery } = useQuery({
     queryKey: ['company-sentiment-info', companyId],
     queryFn: () => fetchCompanyOverview(companyId),
@@ -82,65 +87,88 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
     staleTime: 5 * 60 * 1000,
     placeholderData: keepPreviousData
   })
+  //Query to fetch the paginated news for the recent news page
   const { data: companyNewsQuery, isLoading: isCompanyNewsLoading } = useQuery({
-    queryKey: ['paginatedNews', getApiParams(),companyId],
-    queryFn: () => getPaginatedNews({ userToken: authToken, ...getApiParams(),companyId  }),
+    queryKey: ['paginatedNews', getApiParams(), companyId],
+    queryFn: () => getPaginatedNews({ userToken: authToken, ...getApiParams(), companyId }),
     staleTime: 5 * 60 * 1000,
     placeholderData: keepPreviousData,
     enabled: !!companyDataQuery.companyData,
   });
-
+  // query to fetch the graphs data on the analytics page(Area graph) 
   const { data: companySentimentAvgTrend, isSuccess } = useQuery({
-    queryKey: ['company-avg-sentiment-trend', companyInfo!.companyOverview?.sectorId],
-    queryFn:()=>fetchAnalysisTrend(companyInfo!.companyOverview?.sectorId!.toString() ),
+    queryKey: ['company-avg-sentiment-trend', companyInfo!.companyOverview?.sectorId, sentimentTrendRange],
+    queryFn: () => fetchAnalysisTrend(companyInfo!.companyOverview?.sectorId!.toString(), sentimentTrendRange),
     staleTime: 5 * 60 * 1000,
     placeholderData: keepPreviousData,
-    
     enabled: !!companyDataQuery.companyData,
   });
-  const pivotSentimentData=useMemo(():{date:string; [companyName:string]:number|string}[]=>{
-    const dateMap=new Map();
-    if(!companySentimentAvgTrend?.sentiments){
-      return [{date:new Date().toString(),'no-data':0}];
+  //formatting the data received from the companySentimentAvgTrend query to 
+  // {date:Date, swiggy:number, zomato :number ....}
+  const pivotSentimentData = useMemo(() => {
+    const dateMap = new Map();
+    if (!companySentimentAvgTrend?.sentiments) {
+      return [{ date: new Date().toString(), 'no-data': 0 }];
     }
-    for(let sentimentAvgData of companySentimentAvgTrend.sentiments){
-      const companyKey:string=sentimentAvgData.companyName.toLowerCase();
-      for(let stats of sentimentAvgData.stats){
-        let timeBucket:string|undefined="";
-        if(sentimentTrendRange==='monthly'){
-         timeBucket=new Intl.DateTimeFormat('en-US',{month :'long',year:'2-digit'}).format(new Date(stats.time_bucket));
-        }else{
-         timeBucket=new Intl.DateTimeFormat('en-US',{month :'short', day:'2-digit'}).format(new Date(stats.time_bucket));
 
+    // This map will hold the original date objects for sorting
+    const originalDateMap = new Map<string, Date>();
+
+    for (let sentimentAvgData of companySentimentAvgTrend.sentiments) {
+      const companyKey: string = sentimentAvgData.companyName.toLowerCase();
+      for (let stats of sentimentAvgData.stats) {
+
+        // Keep the original date object
+        const originalDate = new Date(stats.time_bucket);
+        let timeBucket: string = "";
+
+        if (sentimentTrendRange === 'monthly') {
+          timeBucket = new Intl.DateTimeFormat('en-US', { month: 'long', year: '2-digit' }).format(originalDate);
+        } else {
+          timeBucket = new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit' }).format(originalDate);
         }
-        if(!dateMap.has(timeBucket)){
-          dateMap.set(timeBucket,{date:timeBucket})
+
+        if (!dateMap.has(timeBucket)) {
+          dateMap.set(timeBucket, { date: timeBucket });
+          // Store the original date for this formatted bucket
+          originalDateMap.set(timeBucket, originalDate);
         }
-        dateMap.get(timeBucket)[companyKey]=stats.avgSentiment
-        
+        dateMap.get(timeBucket)[companyKey] = stats.avgSentiment
       }
     }
-    const sectorComparison:{date:string; [companyName:string]:number|string}[]=Array.from(dateMap.values());
+
+    const sectorComparison = Array.from(dateMap.values());
+
+    // --- FIX 2: Sort the final array chronologically ---
+    sectorComparison.sort((a, b) => {
+      const dateA = originalDateMap.get(a.date)!.getTime();
+      const dateB = originalDateMap.get(b.date)!.getTime();
+      return dateA - dateB;
+    });
+
     return sectorComparison;
-  } ,[isSuccess, companySentimentAvgTrend])
-  const companyKeysAndColor=useMemo(()=>{
-    if(!pivotSentimentData || pivotSentimentData.length===0){
-      return [{key:"no-data", color:generateRandomHslColor()}];
+
+    // --- FIX 1: Add sentimentTrendRange to the dependency array ---
+  }, [isSuccess, companySentimentAvgTrend, sentimentTrendRange]);
+  //getting randomized color for the area graph using the random hsl generator
+  const companyKeysAndColor: { key: string; color: string }[] = useMemo(() => {
+    if (!pivotSentimentData || pivotSentimentData.length === 0) {
+      return [{ key: "no-data", color: generateRandomHslColor() }];
     }
-    const allKeys=new Set(pivotSentimentData.flatMap(data=>Object.keys(data)));
+    const allKeys = new Set(pivotSentimentData.flatMap(data => Object.keys(data)));
     allKeys.delete('date');
-    const arr=Array.from(allKeys).map((key, index)=>(
-      {key,color:generateRandomHslColor()}
+    const arr = Array.from(allKeys).map((key, index) => (
+      { key, color: generateRandomHslColor() }
     ));
     return arr;
-  },[pivotSentimentData])
-  const getPagesList = useMemo(() => {
+  }, [pivotSentimentData]);
+  //gets the page list using the pagination window function 
+  const getPagesList: number[] = useMemo(() => {
     if (!companyNewsQuery) return [1];
     return calculatePaginationWindow(filters.page, companyNewsQuery.paginationInfo?.totalPages ? companyNewsQuery.paginationInfo?.totalPages : 1);
   }, [filters.page, companyNewsQuery]);
 
-
-  const getSentimentColor = (sentiment: number | undefined) => {
+  const getSentimentColor = (sentiment: number | undefined): string => {
 
     if (sentiment === undefined) return "text-gray-500"
     if (sentiment > neutralLimit) return "text-green-500"
@@ -148,12 +176,8 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
     return "text-yellow-500"
   }
 
-  const getSentimentLabel = (sentiment: number | undefined) => {
-    if (sentiment === undefined) return "Unknown"
-    if (sentiment > neutralLimit) return "Positive"
-    if (sentiment < -neutralLimit) return "Negative"
-    return "Neutral"
-  }
+
+  //calculates the percentages of positive, negative and neutral out of 100
   const percentageandTotal = useMemo((): { positive: number, neutral: number, negative: number, totalArticles: number } => {
     if (!sentimentDataQuery) return { positive: 0, neutral: 0, negative: 0, totalArticles: 0 };
     const total: number = sentimentDataQuery.sentimentStats.reduce((acc, stat) => acc + stat.sentimentCount, 0);
@@ -161,20 +185,30 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
     const neutralPercent: number = (sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "neutral")?.sentimentCount || 0) / total * 100;
     const negativePercent: number = (sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "negative")?.sentimentCount || 0) / total * 100;
     return { positive: postivePercent, neutral: neutralPercent, negative: negativePercent, totalArticles: total };
-  }, [sentimentDataQuery])
-  const sentimentStats = useMemo(() => {
-    
+  }, [sentimentDataQuery]);
+
+  //gets formatted data for the pie chart showing positive, negative and neutral stats
+  const sentimentStats = useMemo((): {
+    name: string;
+    value: number;
+    color: string;
+  }[] => {
+
     if (!sentimentDataQuery.sentimentStats) {
       return [{ name: "Positive", value: 0, color: "#10b981" },
       { name: "Neutral", value: 0, color: "#f59e0b" },
       { name: "Negative", value: 0, color: "#ef4444" },]
     }
-    const sentimentArr =  [{ name: "Positive", value: Number(percentageandTotal.positive.toFixed(2)), color: "#98FB98" },
-      { name: "Neutral", value: Number(percentageandTotal.neutral.toFixed(2)), color: "#FFD700" },
-      { name: "Negative", value: Number(percentageandTotal.negative.toFixed(2)), color: "#D8BFD8" },]
-    
+    const sentimentArr = [{ name: "Positive", value: Number(percentageandTotal.positive.toFixed(2)), color: "#98FB98" },
+    { name: "Neutral", value: Number(percentageandTotal.neutral.toFixed(2)), color: "#FFD700" },
+    { name: "Negative", value: Number(percentageandTotal.negative.toFixed(2)), color: "#D8BFD8" },]
+
     return sentimentArr;
-  }, [percentageandTotal])
+  }, [percentageandTotal]);
+
+  const handleValueChange = (value: string): void => {
+    setSentimentTrendRange(value as typeof sentimentTrendRange);
+  }
   return (
     <div className=" bg-background">
       <Button
@@ -240,7 +274,6 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
             <TabsContent value="sentiment-stats" className="space-y-6">
               <StaggerChildren>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
-                  {/* Positive */}
                   <ScaleIn>
                     <Card className="bg-gradient-to-br from-green-500/30 to-emerald-500/10 border-green-500/30 shadow-md shadow-green-300 hover:border-green-500/60 transition-colors">
                       <CardContent className="p-2">
@@ -252,14 +285,13 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                         </div>
                         <h3 className="text-sm font-medium text-muted-foreground mb-2">Positive Sentiment</h3>
                         <p className="text-3xl font-bold text-green-500 mb-2">
-                          {sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "positive")?.sentimentCount??0}
+                          {sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "positive")?.sentimentCount ?? 0}
                         </p>
 
                       </CardContent>
                     </Card>
                   </ScaleIn>
 
-                  {/* Neutral */}
                   <ScaleIn>
                     <Card className="bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border-yellow-500/30 shadow-md shadow-yellow-300 hover:border-yellow-500/60 transition-colors">
                       <CardContent className="p-2">
@@ -271,14 +303,13 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                         </div>
                         <h3 className="text-sm font-medium text-muted-foreground mb-2">Neutral Sentiment</h3>
                         <p className="text-3xl font-bold text-green-500 mb-2">
-                          {sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "neutral")?.sentimentCount??0}
+                          {sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "neutral")?.sentimentCount ?? 0}
                         </p>
 
                       </CardContent>
                     </Card>
                   </ScaleIn>
 
-                  {/* Negative */}
                   <ScaleIn>
                     <Card className="bg-gradient-to-br from-red-500/10 to-rose-500/10 border-red-500/30 shadow-md shadow-red-300  hover:border-red-500/60 transition-colors">
                       <CardContent className="p-2">
@@ -290,7 +321,7 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                         </div>
                         <h3 className="text-sm font-medium text-muted-foreground mb-2">Negative Sentiment</h3>
                         <p className="text-3xl font-bold text-green-500 mb-2">
-                          {sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "negative")?.sentimentCount??0}
+                          {sentimentDataQuery.sentimentStats.find((stat) => stat.sentiment === "negative")?.sentimentCount ?? 0}
                         </p>
 
                       </CardContent>
@@ -298,7 +329,6 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                   </ScaleIn>
                 </div>
 
-                {/* Overall Stats */}
                 <ScaleIn>
                   <Card className="bg-card/80 backdrop-blur-sm border-border">
                     <CardHeader>
@@ -400,17 +430,17 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                               data={sentimentStats}
                               cx="50%"
                               cy="50%"
-                              
+
                               innerRadius={50}
                               outerRadius={100}
                               dataKey="value"
-                              label={({name,value }: { name: string; value: number }) => `${name} ${value}%`}
+                              label={({ name, value }: { name: string; value: number }) => `${name} ${value}%`}
                             >
                               {sentimentStats.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={entry.color} />
                               ))}
                             </Pie>
-                            
+
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
@@ -422,21 +452,43 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                 <ScaleIn>
                   <Card className="bg-card/80 backdrop-blur-sm border-border">
                     <CardHeader>
-                      <CardTitle className="text-foreground">Sector Sentiment Comparison</CardTitle>
+                      <CardTitle className="text-foreground flex justify-between items-center">
+                         <h1>Sector Sentiment Comparison</h1>
+                         <div >
+                            <Select value={sentimentTrendRange} onValueChange={handleValueChange}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select the range type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectGroup>
+
+                                  {sentimentOptions.map((option, index) => (
+                                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                  ))}
+                                </SelectGroup>
+
+                              </SelectContent>
+
+                            </Select>
+                          </div>
+                        </CardTitle>
                       <CardDescription className="text-muted-foreground">
                         Compare with other companies in your sector
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" className="flex">
+                          
                           <AreaChart data={pivotSentimentData}>
+
                             <defs>
                               <linearGradient id="colorSwiggy" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
                                 <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
                               </linearGradient>
                             </defs>
+                            
                             <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                             <XAxis dataKey="date" stroke="#9ca3af" />
                             <YAxis stroke="#9ca3af" />
@@ -444,40 +496,21 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                               contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid #06b6d4" }}
                             />
                             <Legend />
-                            {companyKeysAndColor?.map((pivotData)=>(
+                            
+                            {companyKeysAndColor?.map((pivotData) => (
                               <Area
-                              type="monotone"
-                              dataKey={pivotData.key}
-                              stroke="#06b6d4"
-                              fill={pivotData.color}
-                              name={pivotData.key}
-                            />
-                            )) }
-                            {/* <Area
-                              type="monotone"
-                              dataKey="swiggy"
-                              stroke="#06b6d4"
-                              fill="url(#colorSwiggy)"
-                              name={mockCompanyData.name}
-                            />
-                            <Area
-                              type="monotone"
-                              dataKey="zomato"
-                              stroke="#8b5cf6"
-                              fill="#8b5cf6"
-                              fillOpacity={0.1}
-                              name="Zomato"
-                            />
-                            <Area
-                              type="monotone"
-                              dataKey="blinkit"
-                              stroke="#ec4899"
-                              fill="#ec4899"
-                              fillOpacity={0.1}
-                              name="Blinkit"
-                            /> */}
+                                type="monotone"
+                                dataKey={pivotData.key}
+                                stroke="#06b6d4"
+                                fill={pivotData.color}
+                                name={pivotData.key}
+                              />
+                            ))}
+
                           </AreaChart>
+
                         </ResponsiveContainer>
+
                       </div>
                     </CardContent>
                   </Card>

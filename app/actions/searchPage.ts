@@ -98,7 +98,6 @@ export async function getPaginatedNews({
       error?:string
     }> {
   try {
-    console.log(companyId)
     const params = new URLSearchParams();
     if (page) params.append("page", page.toString());
     if (limit) params.append("limit", limit.toString());
@@ -116,7 +115,6 @@ export async function getPaginatedNews({
         },
       }
     );
-    console.log(response.data)
     return {
       status: "success",
       ...response.data,

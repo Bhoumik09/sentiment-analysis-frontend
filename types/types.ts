@@ -3,7 +3,6 @@ import {
   fetchTrendingStartups,
 } from "@/app/actions/dashboardAnalytics";
 
-
 export type CompanyIntroType ={
   companyOverview: {
     sector: {
