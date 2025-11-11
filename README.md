@@ -120,10 +120,11 @@ To run the full system, you must run all three components (Database, Backend, Fr
 2.  Install dependencies: `npm install`
 3.  Create a `.env` file:
     ```.env
+    
     DATABASE_URL="postgresql://YOUR_USER:YOUR_PASSWORD@localhost:5432/sentiment_db"
     PORT=8000
-    FRONTEND_URL="http://localhost:3000"
-    INTERNAL_API_KEY="your-secret-api-key"
+    SECRET_KEY="This is the capstone project, used ML and Web together"
+    NODE_ENV="development"
     ```
 4.  Run migrations to create the database schema:
     ```sh
@@ -146,9 +147,11 @@ To run the full system, you must run all three components (Database, Backend, Fr
 2.  Install dependencies: `npm install`
 3.  Create a `.env.local` file:
     ```.env.local
-    NEXT_PUBLIC_API_URL="/api" # Use relative path for proxy
-    EXPRESS_BACKEND_URL="http://localhost:8000"
-    INTERNAL_API_KEY="your-secret-api-key"
+      BACKEND_URL=http://localhost:5000
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME='your cloud name'
+    CLOUDINARY_API_KEY=your-cloudinary-api
+    CLOUDINARY_API_SECRET=your-cloudinary-api-secret
+     JWT_SECRET_KEY="your jwt secret:
     ```
 4.  Run the frontend server:
     ```sh
