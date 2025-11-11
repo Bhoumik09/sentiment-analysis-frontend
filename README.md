@@ -1,196 +1,165 @@
-Startup Sentiment Analysis Platform
+
+
+# Startup Sentiment Analysis Platform
 
 A full-stack, microservice-based intelligence platform to track, analyze, and visualize news sentiment for competing startups.
 
 This project is not just a simple sentiment-tracker. It's a complete data pipeline designed to solve complex, real-world challenges in competitive analysis, including:
 
-Contextual Ambiguity: Differentiates between a company ("BoAt") and a common noun ("boat").
+  * **Contextual Ambiguity:** Differentiates between a company ("BoAt") and a common noun ("boat").
+  * **Targeted Sentiment:** Correctly identifies that positive news for a competitor (like Zomato) is negative news for the company being tracked (like Swiggy).
+  * **High-Level Metrics:** Aggregates data into actionable insights like **Share of Voice (SoV)** and **Net Sentiment Score (NSS)**.
 
-Targeted Sentiment: Correctly identifies that positive news for a competitor (like Zomato) is negative news for the company being tracked (like Swiggy).
+**Frontend Repo:** [Bhoumik09/sentiment-analysis-frontend](https://www.google.com/search?q=https://github.com/Bhoumik09/sentiment-analysis-frontend)
+**Backend Repo:** [Bhoumik09/sentiment-analysis-backend](https://www.google.com/search?q=https://github.com/Bhoumik09/sentiment-analysis-backend)
 
-High-Level Metrics: Aggregates data into actionable insights like Share of Voice (SoV) and Net Sentiment Score (NSS).
 
-Frontend Repo: Bhoumik09/sentiment-analysis-frontend
-Backend Repo: Bhoumik09/sentiment-analysis-backend
 
-<p align="center">
-<img
-src="https://www.google.com/search?q=https://placehold.co/1200x600/2d3748/ffffff%3Ftext%3DProject%2520Dashboard%2520Screenshot"
-alt="Project Dashboard Screenshot"
-width="800"
-/>
-</p>
+## 📊 Core Features
 
-📊 Core Features
+  * **Trending Dashboards:** See the top 4 startups of the week based on **article volume** and the top 4 "Sentiment Movers" based on **percentage sentiment change**.
+  * **Company-Specific Dashboard:** A detailed page for each startup showing its key metrics, competitor comparisons, and a fully paginated feed of its news.
+  * **Sentiment Moving Average:** The company page features a time-series graph plotting a 7-day or 30-day moving average of sentiment scores to smooth out daily noise and reveal long-term trends.
+  * **Competitor Analysis:** Visual dashboards for comparing competitors' Share of Voice (SoV) and Net Sentiment Score (NSS) over time.
+  * **Advanced Article Feed:** A central feed to browse all articles in the database, complete with server-side pagination and filters for industry, sentiment, and startup.
 
-Trending Startups: A dashboard showing the top 4 startups of the week based on article volume.
+## ✨ In-Depth Technical Features
 
-Sentiment Movers: A "Top 4" list of startups with the largest percentage increase or decrease in sentiment.
+This project was built with performance, security, and user experience in mind.
 
-Detailed Article Feed: A paginated feed of all news, filterable by startup, industry, or sentiment.
+### 1\. High-Performance Caching with React Query
 
-Competitor Analysis: Visual dashboards for comparing competitors' Share of Voice (SoV) and Net Sentiment Score (NSS) over time.
+The frontend uses **React Query (TanStack Query)** for all data fetching.
 
-Targeted Sentiment: Each article accurately shows the sentiment for each startup mentioned, solving the "Swiggy vs. Zomato" problem.
+  * **Caching:** API calls (e.g., for the trending startups, the main article feed) are cached. If the user navigates away and comes back, the data is served instantly from cache while a fresh fetch runs silently in the background.
+  * **Reduced API Calls:** This drastically reduces the number of requests to the backend, making the app feel faster and reducing server load.
+  * **State Management:** It eliminates the need for complex global state (like Redux) for server state, simplifying the codebase.
 
-🏗️ System Architecture
+### 2\. Efficient Searching & Pagination
+
+  * **Debounced Searching:** The search bar in the article feed is debounced. This means an API call is only sent *after* the user stops typing (e.g., for 300ms), preventing the app from spamming the backend API on every keystroke.
+  * **Server-Side Pagination:** We display *all* news in the database. To handle this, all pagination is done on the **server** (in the Express.js backend). The frontend simply passes `page` and `limit` parameters. The backend uses Prisma's `skip` and `take` arguments to fetch *only* the 10-20 articles needed for that specific page, ensuring fast loads even with millions of articles.
+
+### 3\. Targeted Sentiment Analysis
+
+This is the "secret sauce" of the project. A basic model fails when an article mentions multiple companies.
+
+  * **Problem:** `"Swiggy's profits soar, beating Zomato."`
+  * **Basic Model:** `Sentiment: Positive` (Wrong for Zomato)
+  * **Our Solution:** We use a **Zero-Shot Classification** model. This allows us to ask *targeted* questions:
+      * **Q1:** What is the sentiment *for Swiggy*? (Labels: `['positive for Swiggy', 'negative for Swiggy']`) -\> **Result:** `positive for Swiggy`
+      * **Q2:** What is the sentiment *for Zomato*? (Labels: `['positive for Zomato', 'negative for Zomato']`) -\> **Result:** `negative for Zomato`
+
+## 🏗️ System Architecture
 
 This project is built on a 3-tier microservice architecture to ensure security, scalability, and separation of concerns.
 
-Next.js Frontend (The "Face"): The user-facing dashboard. It is a React/Next.js app that serves the UI. Its server also acts as a secure proxy, authenticating its own requests to the backend. The user's browser never has access to the data API.
+### 1\. Next.js Frontend (The "Face" & Proxy)
 
-Express.js API (The "Secure Guardian"): A "Backend-for-Frontend" (BFF). This is the only service that is allowed to talk to the database. It exposes secure endpoints for the Next.js app to consume, running complex SQL queries to aggregate data on the fly.
+The user-facing dashboard. Its server acts as a **secure proxy** (a "Backend-for-Frontend").
 
-Python ETL Service (The "Brains"): A separate, background worker service that performs all the heavy lifting. It runs on a schedule to fetch, analyze, and load data into the database.
+  * **How it works:** The user's browser *never* talks to the data API. It only talks to the Next.js server's API routes (e.g., `/api/trending`). The Next.js server then secretly calls the *real* Express backend, adding a secret API key.
+  * **Why:** This hides our entire backend infrastructure and protects our database from the public internet.
 
-💡 How It Works: The Data Pipeline (Python Service)
+### 2\. Express.js API (The "Secure Guardian")
 
-The "Brains" of the operation is the Python ETL service. It uses an efficient "Article-First" workflow to save on costs and processing time.
+This is the *only* service that is allowed to talk to the database.
 
-1. Smart Fetching
+  * **Role-Based Access Control (RBAC):** This backend has middleware that checks for user roles (e.g., `User` vs. `Admin`). `Admin` roles might have permission to delete articles or manage startups, while `User` roles are read-only. The frontend also checks this role to hide or show UI elements (like a "Delete" button).
+  * **Advanced Queries:** This service runs the complex, raw SQL queries (using `prisma.$queryRaw`) needed to calculate statistics like weekly article counts and sentiment percentage changes.
 
-Instead of running 30+ separate, expensive API calls for each startup, the pipeline runs 3-5 broad, consolidated queries for entire sectors (e.g., "Fintech", "EdTech", "Mobility").
+### 3\. Python ETL Service (The "Brains")
 
-2. Smart Filtering
+A separate, background worker service that performs all the heavy lifting. It runs on a schedule to fetch, analyze, and load data into the database.
 
-This large batch of articles is scanned once using the Aho-Corasick algorithm (pyahocorasick). This specialized search engine finds all 30+ startup names in the text in a single pass, which is thousands of times faster than looping.
+  * **Smart Fetching:** Runs 3-5 *broad, consolidated queries* for entire sectors (e.g., "Fintech", "EdTech") to reduce API calls.
+  * **Smart Filtering:** Uses the **Aho-Corasick algorithm** (`pyahocorasick`) to find all 30+ startup names in a batch of articles in a single, ultra-fast pass.
+  * **Smart Saving:** Saves data to our **Many-to-Many** schema, correctly linking one article to multiple startups with different sentiments.
 
-3. Smart Analysis (The "Secret Sauce")
+## 🛠️ Technology Stack
 
-This is what solves the "Swiggy vs. Zomato" problem. We do not use a basic sentiment model. We use a Zero-Shot Classification model from Hugging Face.
+| Component | Technology |
+| :--- | :--- |
+| **Frontend** (UI & Proxy) | Next.js (React), TypeScript, **React Query**, Tailwind CSS, Recharts |
+| **Backend** (Secure API) | Node.js, Express.js, TypeScript, **Prisma**, PostgreSQL |
+| **ETL** (Data Pipeline) | Python, Hugging Face `transformers`, `pyahocorasick`, `psycopg2` |
+| **Database** | PostgreSQL |
+| **News API** | [NewsAPI.org](https://newsapi.org/) (or similar) |
 
-For an article like "Swiggy's profits soar, beating Zomato", the model is run once with multiple labels:
-
-Text: "Swiggy's profits soar, beating Zomato"
-
-Labels: ['positive for Swiggy', 'negative for Swiggy', 'positive for Zomato', 'negative for Zomato']
-
-Result: The model correctly identifies:
-
-positive for Swiggy (Score: 0.95)
-
-negative for Zomato (Score: 0.92)
-
-4. Smart Saving
-
-This result is saved to our Many-to-Many schema. One Articles record is created, and two ArticlesSentiment records are created to link both startups to the same article with their unique, targeted sentiments.
-
-🛠️ Technology Stack
-
-Component
-
-Technology
-
-Frontend (UI & Proxy)
-
-Next.js (React), TypeScript, Tailwind CSS, Recharts
-
-Backend (Secure API)
-
-Node.js, Express.js, TypeScript, Prisma, PostgreSQL
-
-ETL (Data Pipeline)
-
-Python, Hugging Face transformers, pyahocorasick, psycopg2 (or SQLAlchemy)
-
-Database
-
-PostgreSQL
-
-News API
-
-NewsAPI.org (or similar)
-
-🚀 Getting Started (Local Setup)
+## 🚀 Getting Started (Local Setup)
 
 To run the full system, you must run all three components (Database, Backend, Frontend) plus the Python script.
 
-1. Database
+### 1\. Database
 
-Install and run PostgreSQL.
+1.  Install and run [PostgreSQL](https://www.postgresql.org/).
+2.  Create a new database (e.g., `sentiment_db`).
 
-Create a new database (e.g., sentiment_db).
+### 2\. Backend (Express.js)
 
-2. Backend (Express.js)
+1.  Clone the backend repo:
+    ```sh
+    git clone https://github.com/Bhoumik09/sentiment-analysis-backend.git
+    cd sentiment-analysis-backend
+    ```
+2.  Install dependencies: `npm install`
+3.  Create a `.env` file:
+    ```.env
+    DATABASE_URL="postgresql://YOUR_USER:YOUR_PASSWORD@localhost:5432/sentiment_db"
+    PORT=8000
+    FRONTEND_URL="http://localhost:3000"
+    INTERNAL_API_KEY="your-secret-api-key"
+    ```
+4.  Run migrations to create the database schema:
+    ```sh
+    npx prisma migrate dev --name "init"
+    ```
+5.  Seed the `Sector` table (run the `createSectors.ts` script you made).
+6.  Run the backend server:
+    ```sh
+    npm run dev
+    ```
+    Your API will be live at `http://localhost:8000`.
 
-Clone the backend repo:
+### 3\. Frontend (Next.js)
 
-git clone [https://github.com/Bhoumik09/sentiment-analysis-backend.git](https://github.com/Bhoumik09/sentiment-analysis-backend.git)
-cd sentiment-analysis-backend
+1.  In a **new terminal**, clone the frontend repo:
+    ```sh
+    git clone https://github.com/Bhoumik09/sentiment-analysis-frontend.git
+    cd sentiment-analysis-frontend
+    ```
+2.  Install dependencies: `npm install`
+3.  Create a `.env.local` file:
+    ```.env.local
+    NEXT_PUBLIC_API_URL="/api" # Use relative path for proxy
+    EXPRESS_BACKEND_URL="http://localhost:8000"
+    INTERNAL_API_KEY="your-secret-api-key"
+    ```
+4.  Run the frontend server:
+    ```sh
+    npm run dev
+    ```
+    Your app will be live at `http://localhost:3000`.
 
+### 4\. ETL Service (Python)
 
-Install dependencies: npm install
-
-Create a .env file and add your database URL:
-
-DATABASE_URL="postgresql://YOUR_USER:YOUR_PASSWORD@localhost:5432/sentiment_db"
-PORT=8000
-FRONTEND_URL="http://localhost:3000"
-INTERNAL_API_KEY="your-secret-api-key"
-
-
-Run migrations to create the database schema:
-
-npx prisma migrate dev --name "init"
-
-
-Seed the Sector table (run the createSectors.ts script you made).
-
-Run the backend server:
-
-npm run dev
-
-
-Your API will be live at http://localhost:8000.
-
-3. Frontend (Next.js)
-
-In a new terminal, clone the frontend repo:
-
-git clone [https://github.com/Bhoumik09/sentiment-analysis-frontend.git](https://github.com/Bhoumik09/sentiment-analysis-frontend.git)
-cd sentiment-analysis-frontend
-
-
-Install dependencies: npm install
-
-Create a .env.local file to point to your backend:
-
-NEXT_PUBLIC_API_URL="/api" # Use relative path for proxy
-EXPRESS_BACKEND_URL="http://localhost:8000"
-INTERNAL_API_KEY="your-secret-api-key"
-
-
-Run the frontend server:
-
-npm run dev
-
-
-Your app will be live at http://localhost:3000.
-
-4. ETL Service (Python)
-
-In a new terminal, set up your Python environment (clone, create a venv, etc.).
-
-Install dependencies:
-
-pip install -r requirements.txt 
-# (Create this file with: transformers, torch, pyahocorasick, psycopg2-binary, etc.)
-
-
-Create a .env file for the Python script:
-
-DB_NAME="sentiment_db"
-DB_USER="YOUR_USER"
-DB_PASSWORD="YOUR_PASSWORD"
-DB_HOST="localhost"
-NEWS_API_KEY="your-news-api-key"
-
-
-Run the addStartups.py script once to populate the Startups table.
-
-Run the main ETL script to fetch and analyze articles:
-
-python main_etl.py
-
-
-Once the script finishes, refresh your browser at http://localhost:3000 to see the new data.
+1.  In a **new terminal**, set up your Python environment.
+2.  Install dependencies:
+    ```sh
+    pip install -r requirements.txt 
+    # (Create this file with: transformers, torch, pyahocorasick, psycopg2-binary, etc.)
+    ```
+3.  Create a `.env` file for the Python script:
+    ```.env
+    DB_NAME="sentiment_db"
+    DB_USER="YOUR_USER"
+    DB_PASSWORD="YOUR_PASSWORD"
+    DB_HOST="localhost"
+    NEWS_API_KEY="your-news-api-key"
+    ```
+4.  Run the `addStartups.py` script once to populate the `Startups` table.
+5.  Run the main ETL script to fetch and analyze articles:
+    ```sh
+    python main_etl.py
+    ```
+6.  Once the script finishes, refresh your browser at `http://localhost:3000` to see the new data.
