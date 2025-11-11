@@ -41,6 +41,7 @@ export const uploadImage = async ({
     if (!token) {
       return null;
     }
+    console.log(token)
     const response = await axios.patch(
       `${api}/fetcher/upload-image/${startupId}`,
       {

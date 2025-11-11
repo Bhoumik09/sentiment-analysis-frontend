@@ -37,6 +37,7 @@ import { string } from "zod"
 import { neutralLimit } from "@/lib/constants"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime"
+import Image from "next/image"
 // Mock data
 
 const mockCompanyData = {
@@ -225,11 +226,14 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
 
             <div className="flex-1 flex max-lg:flex-col gap-6">
               {/* Company Image */}
-              <div className="lg:flex-shrink-0 max-lg:m-auto">
-                <img
+              <div className="lg:flex-shrink-0 max-lg:m-auto  ">
+                <Image
                   src={companyDataQuery.companyData?.imageUrl ?? "/company-default.jpg"}
-                  alt={companyDataQuery.companyData?.name}
-                  className="w-40 h-40 rounded-2xl border-2 border-accent/30 object-cover"
+                  alt={companyDataQuery.companyData?.name??"Company Name"}
+                  height={100}
+                  width={100}
+                  loading='lazy'
+                  className="size-40 rounded-2xl border-2 border-accent/30 object-cover"
                 />
               </div>
               {/* Company Info */}
