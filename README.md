@@ -123,7 +123,7 @@ To run the full system, you must run all three components (Database, Backend, Fr
     
     DATABASE_URL="postgresql://YOUR_USER:YOUR_PASSWORD@localhost:5432/sentiment_db"
     PORT=8000
-    SECRET_KEY="This is the capstone project, used ML and Web together"
+    SECRET_KEY="your-secret-key"
     NODE_ENV="development"
     ```
 4.  Run migrations to create the database schema:
