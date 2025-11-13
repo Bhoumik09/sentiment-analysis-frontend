@@ -38,6 +38,7 @@ import { neutralLimit } from "@/lib/constants"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime"
 import Image from "next/image"
+import { useAuth } from "@/context/AuthContext"
 // Mock data
 
 const mockCompanyData = {
@@ -59,6 +60,7 @@ interface CompanyDashboardProps {
   companyId: string;
 }
 export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: CompanyDashboardProps) {
+  const {authData}=useAuth();
   const [sentimentTrendRange, setSentimentTrendRange] = useState<"monthly" | "weekly">("monthly");
   const sentimentOptions: { value: string; label: string; }[] = [
     { value: 'monthly', label: 'Monthly' },
@@ -522,7 +524,7 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
               </div>
 
               {/* Sentiment Trend Line Chart */}
-              <ScaleIn>
+              { authData && authData.userData?.roleId==2 && <ScaleIn>
                 <Card className="bg-card/80 backdrop-blur-sm border-border">
                   <CardHeader>
                     <CardTitle className="text-foreground">Sentiment Trend Analysis</CardTitle>
@@ -563,7 +565,7 @@ export function CompanyDashboard({ companyInfo, sentimentInfo, companyId }: Comp
                     </div>
                   </CardContent>
                 </Card>
-              </ScaleIn>
+              </ScaleIn>}
             </TabsContent>
           </Tabs>
         </FadeIn>
